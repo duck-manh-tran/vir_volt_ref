@@ -18,7 +18,7 @@ cmd = 'ngspice -b -i d_bgr_model.spice'
 cmd = cmd + set_vdd + set_m[0] + set_m[1] + set_m[2]
 print (cmd)
 os.system(cmd)
-
+'''
 # load data from txt file to python
 cmd2 = "sed -i -e \"1,5d\" discharge_time.txt"
 print (cmd2)
@@ -64,4 +64,4 @@ os.system(cmd3)
 # 		 + C[21]*X**6 + C[22]*X**5*Y + C[23]*X**4*Y**2 + C[24]*X**3*Y**3 + C[25]*X**2*Y**4 + C[26]*X*Y**5 + C[27]*Y**6 \
 # 
 
-
+'''
