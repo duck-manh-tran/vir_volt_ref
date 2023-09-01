@@ -1,0 +1,27 @@
+** sch_path: /home/manhtd_61d/work/d_bgr/xschem/discharge_nwk.sch
+**.subckt discharge_nwk
+XM1 net3 net3 VP VP sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
+XM2 net2 net2 net1 net1 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
+XM3 net1 net1 net3 net3 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1 
+XM4 net4 net4 net2 net2 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
+XM5 GND GND net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
+XC1 VP GND sky130_fd_pr__cap_mim_m3_2 W=14.5 L=1.5 MF=10 m=10
+**** begin user architecture code
+
+.lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.param W = 0.5
+.param V_init = 0.81
+.ic v(VP) = V_init
+
+.control
+save VP
+tran 100n 31m
+print VP > time2vol.txt
+write discharge_nwk.raw
+.endc
+
+
+**** end user architecture code
+**.ends
+.GLOBAL GND
+.end
