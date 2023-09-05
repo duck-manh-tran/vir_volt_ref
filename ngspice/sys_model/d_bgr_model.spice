@@ -40,11 +40,12 @@ a_dff0 d0 cmp_sig low rst0 sig1 d0 flop1
 a_dff1 d1 bit11 low rst0 sig2 d1 flop1
 a_xor0 [sig1 sig2] rst1 xor1
 a_inv0 rst1 rst1_bar inv1
+a_inv1 rst1_bar rst1_dl inv1
 
 X_counter2 clk low rst1_bar bit8 bit9 bit10 bit11 counter_12b
 a_and0 [bit8 ~bit9 ~bit10] set_dac_sig and1
-a_nand1 [bit8 ~bit9 bit10] charge_sw1 nand1
-a_or1 [rst0 ~charge_sw1] charge_sw or1
+a_and1 [~bit11 bit10] charge_sw2 and1
+a_or1 [rst0 charge_sw2] charge_sw or1
 
 .model and1 d_and(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
 .model inv1 d_inverter(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
@@ -108,13 +109,16 @@ while (ix<3)
 	let ix = ix+1
 end
 
-stop when v(a_rst0) > 0.4  when v(VP_) < 0.1
+stop when v(a_rst0)>0.4  when v(VP_)<0.1
 let cnt_stop=1
 let dvol1 = DAC_vol[0]-0.01
-stop when set_dac_sig=1   when v(VP_) > '$&dvol1' 
+stop when set_dac_sig=1  when v(VP_)>'$&dvol1'
 let dvol2 = DAC_vol[1]-0.01
-stop when set_dac_sig=1  when v(VP_) > '$&dvol1'  when v(VP_) > '$&dvol2'
-tran 100n 50m
+let quad_vol2 = DAC_vol[1]/4
+stop when set_dac_sig=1  when v(VP)<'$&quad_vol2'  when v(VP_)>'$&dvol2'
+
+tran 100n 60m
+
 alter V_DAC dc = dac_vol[0]
 resume
 let cnt_stop=2
