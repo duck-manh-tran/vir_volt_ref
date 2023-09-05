@@ -1,38 +1,94 @@
 ** circuit: digital_BGR_model
-
-.subckt discharge_nwk _VP_ VGND W=0.5
+** -------- discharge network description -------- **
+.subckt discharge_nwk ctrl _VP_ VGND W=0.5
 XM1 net3 net3 _VP_ _VP_ sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
 XM2 net2 net2 net1 net1 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
 XM3 net1 net1 net3 net3 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1 
 XM4 net4 net4 net2 net2 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
-XM5 GND VGND net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM5 netk netk net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
 XC1 _VP_ VGND sky130_fd_pr__cap_mim_m3_2 W=14.5 L=1.5 MF=10 m=10
+XMk netk ctrl VGND VGND sky130_fd_pr__nfet_01v8 L=0.15 W=2 nf=2
+.ends
+X_discharge_nwk ctrl VP GND discharge_nwk W=W
+*charge sw 
+asw a_charge_sw %gd(VP_ VP) switch3
+.model switch3 aswitch(cntl_off='v_dd/2-5m' cntl_on='v_dd/2+5m' r_off=1e15
++ r_on=10k log=TRUE limit=TRUE)
+** -------- end discharge network description --------**
+
+** -------- Time to digital description ---------- **
+X_counter1 d_clk d_low d_rst o0 o1 o2 o3 o4 o5 o6 o7 o8 o9 o10 o11 o12 o13 o14 o15 counter_16b
+ECMP a_fb_cmp net3 TABLE {V(ref_sig ,VP)} = ( -1mV , 0V ) ( 1mV , 0.8V )
+r1 VP_ ref_sig 30k
+r2 ref_sig gnd 10k
+r3 net3 gnd 10k
+** -------- end 
+
+** ---------------- DAC description --------------- **
+
+V_DAC VP_ gnd DC = 0.05
+* r5 r_in_dac gnd 1k 
+** ----------------- end
+
+** ---------- Simulation controller description ----------- **
+
+X_rst d_clk d_low d_rst0 d_fb_cmp d_rst d_rst_bar bit9 bit10 set_dac_sig d_charge_sw controller
+
+.subckt controller clk low rst0 cmp_sig rst rst_bar bit9 bit10 set_dac_sig charge_sw
+a_or0 [rst0 rst1] rst or1
+a_dff0 d0 cmp_sig low rst0 sig1 d0 flop1
+a_dff1 d1 bit11 low rst0 sig2 d1 flop1
+a_xor0 [sig1 sig2] rst1 xor1
+a_inv0 rst1 rst1_bar inv1
+
+X_counter2 clk low rst1_bar bit8 bit9 bit10 bit11 counter_12b
+a_and0 [bit8 ~bit9 ~bit10] set_dac_sig and1
+a_nand1 [bit8 ~bit9 bit10] charge_sw1 nand1
+a_or1 [rst0 ~charge_sw1] charge_sw or1
+
+.model and1 d_and(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
+.model inv1 d_inverter(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
+.model or1 d_or(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
+.model flop1 d_dff(clk_delay = 13.0e-9 set_delay = 25.0e-9 reset_delay = 27.0e-9 
++ ic = 2 rise_delay = 10.0e-9 fall_delay = 3e-9)
+.model nand1 d_nand(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
+.model xor1 d_xor(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
 .ends
 
-X_discharge_nwk VP GND discharge_nwk W=W
- 
-* Digital circuits by xspice
-a8 enb %gd(VP_ VP) switch3
-.model switch3 aswitch(cntl_off=0.0 cntl_on=0.4 r_off=1e15
-+ r_on=10k log=TRUE limit=TRUE)
+abridge1 [d_charge_sw] [a_charge_sw] dac1
+.model dac1 dac_bridge(out_low = 0 out_high = 'v_dd' out_undef = 'v_dd/2'
++ input_load = 5.0e-12 t_rise = 0.5e-9
++ t_fall = 0.5e-9)
+
+*** adc_bridge blocks ***
+aconverter [a_clk a_sel a_rst0 a_fb_cmp a_high a_sig 0] [d_clk d_sel d_rst0 d_fb_cmp d_hi d_sig d_low] adc1
+.model adc1 adc_bridge (in_low='v_dd/2-5m' in_high='v_dd/2+5m' 
++                              rise_delay=1.0e-12 fall_delay=1.0e-12)
 
 * Voltage setup for the circuit
-V_DAC VP_ GND DC=0.05
-V_sup VDD GND DC=v_dd
-V_enb enb GND pulse (0 v_dd T_set 0 0 T_on 1 1)
-V_clk clk GND pulse (0 0.8 0 'prd/20' 'prd/20' '9*prd/20' prd)
+V_sup VDD GND DC = 'v_dd'
+V_clk a_clk GND pulse (0 'v_dd' 0 'prd/20' 'prd/20' '9*prd/20' prd)
+V_rst0 a_rst0 net4 pulse  (0 'v_dd' 'T_set' 1e-12 1e-12 'T_on' 1 1)
+r4 net4 gnd 10k
+V_ctrl ctrl net6 dc = 'v_dd'
+r6 net6 gnd 10k 
+*input sources resistance
 
 * Setup simulation 
 .lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.inc ./../lib/counter.spice
+.inc ./../lib/mux2i_1.spice
 .param clk_freq = 1e6
 .param prd = '1/clk_freq'
-.param T_set = 0.1m T_on = 0.5m
+.param T_set = 0.22m T_on = 0.5m
 .param W = 0.5
 .param V_init = 0.2
 .param v_dd = 0.8
 .csparam v_dd_ = {v_dd}
 .ic v(VP) = V_init
 .option trtol = 5
+
+** -------------------- end controller descriptions ----------------------- **
 
 .control
 save all
@@ -43,6 +99,7 @@ let NoL = 65536		$ Number of DAC Levels
 let m = vector(3)		$ storage of DAC m levels
 let n = vector(3)		$ storage of TDC discharge time
 let DAC_vol = vector(3)		$ storage of the DAC voltage
+
 * get the value of the m vector
 let ix = 0
 while (ix<3)
@@ -51,72 +108,24 @@ while (ix<3)
 	let ix = ix+1
 end
 
-stop when v(enb) > 0.4  when v(VP_) = 0.05
-
-let quad_dvol1 = DAC_vol[0]/4
+stop when v(a_rst0) > 0.4  when v(VP_) < 0.1
+let cnt_stop=1
 let dvol1 = DAC_vol[0]-0.01
-stop when v(VP)<'$&quad_dvol1' when v(VP_) ge '$&dvol1'
-
-let quad_dvol2 = DAC_vol[1]/4
+stop when set_dac_sig=1   when v(VP_) > '$&dvol1' 
 let dvol2 = DAC_vol[1]-0.01
-stop when v(VP)<'$&quad_dvol2' when v(VP_) ge '$&dvol2'
-
-* let quad_dvol3 = DAC_vol[2]/4
-* let dvol3 = DAC_vol[2]-0.01
-* stop when v(VP)<'$&quad_dvol3' when v(VP_) ge '$&dvol3'
-
-tran 100n 80m
-
-alter V_DAC dc = DAC_vol[0]
+stop when set_dac_sig=1  when v(VP_) > '$&dvol1'  when v(VP_) > '$&dvol2'
+tran 100n 50m
+alter V_DAC dc = dac_vol[0]
 resume
-
-meas tran t1_stop when v(VP) = '$&quad_dvol1' CROSS=1
-let t1_charge = t1_stop+0.1m
-alter @V_enb[pulse] = (0 '$&v_dd_' '$&t1_charge' 0 0 0.5m 1)
-alter V_DAC dc = DAC_vol[1]
+let cnt_stop=2
+alter V_DAC dc = dac_vol[1]
 resume
-
-meas tran t2_stop when v(VP) = '$&quad_dvol2' CROSS=1
-let t2_charge = t2_stop+0.1m
-alter @V_enb[pulse] = (0 '$&v_dd_' '$&t2_charge' 0 0 0.5m 1)
-alter V_DAC dc = DAC_vol[2]
+alter V_DAC dc = dac_vol[2]
 resume
-
-
-plot enb vp vp_
+plot set_dac_sig
+plot bit9 bit10
+plot VP VP_ d_rst
 .endc
-**** end user architecture code
-**.ends
 .GLOBAL GND
 .end
-
-* alter V_DAC dc=DAC_vol
-* alter V_sup dc=$v_dd
-* let quad_dd = $v_dd/4
-* meas tran DAC_out AVG v(VP_) from=2m to=10m
-* meas tran t_dis WHEN v(VP)=quad_dd CROSS=LAST
-* meas tran t_dis trig v(enb) val=0 FALL=1  targ v(VP) val=quad_dd FALL=1
-* let n[im] = 't_dis-1.1m'
-* print DAC_out
-* let im = im+1
-* end
-* print n > discharge_time.txt
-* write d_bgr_model.raw
-* 
-* echo " _________________________________________"
-* echo "|   go to the reference hold operation		|"
-* echo " -----------------------------------------"
-* 
-* save VP_ VP enb clk  
-* set N = 65536
-* let DAC_vol = ($m_set/$N)*$v_dd
-* alter V_sup dc=$v_dd
-* alter V_DAC dc=DAC_vol
-* run
-* let ix=ix+1
-* meas tran DAC_out AVG v(VP_) from=2m to=10m
-* print DAC_out
-* end
-* write d_bgr_model.raw
-* 
 
