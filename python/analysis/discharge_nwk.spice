@@ -1,18 +1,24 @@
 ** sch_path: /home/manhtd_61d/work/d_bgr/xschem/discharge_nwk.sch
 **.subckt discharge_nwk
-XM1 net3 net3 VP VP sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
-XM2 net2 net2 net1 net1 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
-XM3 net1 net1 net3 net3 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1 
-XM4 net4 net4 net2 net2 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
-XM5 GND GND net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W=W nf=1
-XC1 VP GND sky130_fd_pr__cap_mim_m3_2 W=14.5 L=1.5 MF=10 m=10
+.subckt discharge_nwk ctrl _VP_ VGND W=0.5
+XM1 net3 net3 _VP_ _VP_ sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM2 net2 net2 net1 net1 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM3 net1 net1 net3 net3 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1 
+XM4 net4 net4 net2 net2 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM5 netk netk net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XC1 _VP_ VGND sky130_fd_pr__cap_mim_m3_2 W=14.5 L=1.5 MF=10 m=10
+XMk netk ctrl VGND VGND sky130_fd_pr__nfet_01v8 L=0.15 W=2 nf=2
+.ends
+X_discharge_nwk ctrl VP GND discharge_nwk W=W
 **** begin user architecture code
 
 .lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 .param W = 0.5
 .param V_init = 0.81
+.param v_dd = 0.6
 .ic v(VP) = V_init
 
+V_ctrl ctrl gnd dc='v_dd'
 .control
 save VP
 tran 100n 31m

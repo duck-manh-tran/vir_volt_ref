@@ -19,7 +19,7 @@ asw a_charge_sw %gd(VP_ VP) switch3
 ** -------- Time to digital description ---------- **
 X_counter1 d_clk d_low d_rst o0 o1 o2 o3 o4 o5 o6 o7 o8 o9 o10 o11 o12 o13 o14 o15 counter_16b
 ECMP a_fb_cmp net3 TABLE {V(ref_sig ,VP)} = ( -1mV , 0V ) ( 1mV , 0.8V )
-r1 VP_ ref_sig 30k
+r1 VDD ref_sig 30k
 r2 ref_sig gnd 10k
 r3 net3 gnd 10k
 ** -------- end 
@@ -32,9 +32,9 @@ V_DAC VP_ gnd DC = 0.05
 
 ** ---------- Simulation controller description ----------- **
 
-X_rst d_clk d_low d_rst0 d_fb_cmp d_rst d_rst_bar bit9 bit10 set_dac_sig d_charge_sw controller
+X_rst d_clk d_low d_rst0 d_fb_cmp d_rst d_rst_bar bit9 bit10 set_dac_sig d_charge_sw bit_sel0 bit_sel1 controller
 
-.subckt controller clk low rst0 cmp_sig rst rst_bar bit9 bit10 set_dac_sig charge_sw
+.subckt controller clk low rst0 cmp_sig rst rst_bar bit9 bit10 set_dac_sig charge_sw bit_sel0 bit_sel1
 a_or0 [rst0 rst1] rst or1
 a_dff0 d0 cmp_sig low rst0 sig1 d0 flop1
 a_dff1 d1 bit11 low rst0 sig2 d1 flop1
@@ -46,6 +46,7 @@ X_counter2 clk low rst1_bar bit8 bit9 bit10 bit11 counter_12b
 a_and0 [bit8 ~bit9 ~bit10] set_dac_sig and1
 a_and1 [~bit11 bit10] charge_sw2 and1
 a_or1 [rst0 charge_sw2] charge_sw or1
+x_sub_cnt rst low rst0 bit_sel0 bit_sel1 counter_2b
 
 .model and1 d_and(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
 .model inv1 d_inverter(rise_delay = 0.5e-9 fall_delay = 0.3e-9 input_load = 0.5e-12)
@@ -62,9 +63,8 @@ abridge1 [d_charge_sw] [a_charge_sw] dac1
 + t_fall = 0.5e-9)
 
 *** adc_bridge blocks ***
-aconverter [a_clk a_sel a_rst0 a_fb_cmp a_high a_sig 0] [d_clk d_sel d_rst0 d_fb_cmp d_hi d_sig d_low] adc1
-.model adc1 adc_bridge (in_low='v_dd/2-5m' in_high='v_dd/2+5m' 
-+                              rise_delay=1.0e-12 fall_delay=1.0e-12)
+aconverter [a_clk  a_rst0 a_fb_cmp a_high a_sig 0] [d_clk d_rst0 d_fb_cmp d_hi d_sig d_low] adc1
+.model adc1 adc_bridge (in_low='v_dd/2-5m' in_high='v_dd/2+5m' rise_delay=1.0e-12 fall_delay=1.0e-12)
 
 * Voltage setup for the circuit
 V_sup VDD GND DC = 'v_dd'
@@ -84,15 +84,16 @@ r6 net6 gnd 10k
 .param T_set = 0.22m T_on = 0.5m
 .param W = 0.5
 .param V_init = 0.2
-.param v_dd = 0.8
+.param v_dd = 0.4
 .csparam v_dd_ = {v_dd}
 .ic v(VP) = V_init
 .option trtol = 5
+.save vp vp_ a_rst0 a_charge_sw x_rst.bit_sel0 x_rst.bit_sel1 d_rst set_dac_sig
++ ctrl
++ o15 o14 o13 o12 o11 o10 o9 o8 o7 o6 o5 o4 o3 o2 o1 o0
 
 ** -------------------- end controller descriptions ----------------------- **
-
 .control
-save all
 echo  ______________________________________
 echo |   go to the measurement operation    |
 echo  --------------------------------------
@@ -109,25 +110,31 @@ while (ix<3)
 	let ix = ix+1
 end
 
-stop when v(a_rst0)>0.4  when v(VP_)<0.1
+let half_vdd = v_dd_/2
+stop when v(a_rst0)>'$&half_vdd'  when v(VP_)<0.1
 let cnt_stop=1
 let dvol1 = DAC_vol[0]-0.01
-stop when set_dac_sig=1  when v(VP_)>'$&dvol1'
+stop when set_dac_sig=1  when bit_sel0=0 when bit_sel1=0 when v(VP_)>'$&dvol1'
 let dvol2 = DAC_vol[1]-0.01
-let quad_vol2 = DAC_vol[1]/4
-stop when set_dac_sig=1  when v(VP)<'$&quad_vol2'  when v(VP_)>'$&dvol2'
+stop when set_dac_sig=1  when bit_sel0=1 when bit_sel1=0 when v(VP_)>'$&dvol2'
+stop when set_dac_sig=1  when bit_sel0=0 when bit_sel1=1 when v(ctrl)>'$&half_vdd'
 
-tran 100n 60m
+tran 100n 50m
 
 alter V_DAC dc = dac_vol[0]
 resume
-let cnt_stop=2
+eprint o15 o14 o13 o12 o11 o10 o9 o8 o7 o6 o5 o4 o3 o2 o1 o0 > stop1.txt
 alter V_DAC dc = dac_vol[1]
 resume
+eprint o15 o14 o13 o12 o11 o10 o9 o8 o7 o6 o5 o4 o3 o2 o1 o0 > stop2.txt
 alter V_DAC dc = dac_vol[2]
 resume
-plot set_dac_sig
-plot bit9 bit10
+eprint o15 o14 o13 o12 o11 o10 o9 o8 o7 o6 o5 o4 o3 o2 o1 o0 > stop3.txt
+let m_ref = `/bin/bash -c "python processor_model.py 3"`
+let DAC_ref = (m_ref/NoL)*v_dd_
+alter V_DAC dc = dac_ref
+alter V_ctrl dc = 0 
+resume
 plot VP VP_ d_rst
 .endc
 .GLOBAL GND
