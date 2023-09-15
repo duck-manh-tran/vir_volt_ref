@@ -1,0 +1,101 @@
+* the design of fully synthesizable DAC.
+
+** model of the digital cells
+.model inv1 d_inverter(rise_delay = 0.5e-10 fall_delay = 0.3e-10
++ input_load = 0.5e-12)
+.model and1 d_and(rise_delay = 0.5e-10 fall_delay = 0.3e-10
++ input_load = 0.5e-12)
+.model or1 d_or(rise_delay = 0.5e-10 fall_delay = 0.3e-10
++ input_load = 0.5e-12)
+.model flop1 d_dff(clk_delay = 13.0e-10 set_delay = 25.0e-10
++ reset_delay = 27.0e-10 ic = 2 rise_delay = 10.0e-10 fall_delay = 3e-10)
+.model adc_bridge1 adc_bridge (in_low='v_dd/2-5m' in_high='v_dd/2+0.5m'
++ rise_delay = 1.0e-12 fall_delay = 1.0e-12)
+.model dac1 dac_bridge(out_low = 0 out_high = 'v_dd' out_undef = 'v_dd/2'
++ input_load = 5.0e-12 t_rise = 50e-9 t_fall = 20e-9)
+.model input_vector d_source(input_file = "data.txt")
+
+** circuit description of the isolated buffer
+.subckt isobuf1 A sleep X
+a_inv1_0 sleep sleep_bar inv1
+a_and1_0 [A sleep_bar] X and1
+.ends
+
+** circuit description of the mux2i
+.subckt mux2i_1 sel in0 in1 out
+ai1 sel sel_bar inv1
+aa1 [sel_bar in0] out0 and1
+aa2 [sel in1] out1 and1
+ao2 [out0 out1] out or1
+.ends
+
+.subckt nand2b A_N B Y
+a_inv1_0 B B_bar inv1
+a_and1_0 [A_N B_bar] Y and1
+.ends
+
+** circuit description of the ddpm_cell
+.subckt ddpm_cell clk_in rst data_in ddpm_in allzeros_in 
++ clk_out ddpm_out allzeros_out
+a_dff1_0 d0 clk_in d_low rst clk_out d0 flop1
+x_isobuf1_0 allzeros_in clk_out allzeros_out isobuf1
+a_and1_0 [allzeros_in clk_out] sel_sig and1
+x_mux2i_1_0 sel_sig ddpm_in data_in ddpm_out mux2i_1
+.ends
+
+* d_clk <=> clk_0
+** 4-bit dac
+X_ddpm_0 d_clk d_rst data_3 ddpm_1 allzeros_0 clk_1 ddpm_0 allzeros_1 ddpm_cell
+X_ddpm_1 clk_1 d_rst data_2 ddpm_2 allzeros_1 clk_2 ddpm_1 allzeros_2 ddpm_cell
+X_ddpm_2 clk_2 d_rst data_1 ddpm_3 allzeros_2 clk_3 ddpm_2 allzeros_3 ddpm_cell
+X_ddpm_3 clk_3 d_rst data_0 ddpm_4 allzeros_3 clk_4 ddpm_3 allzeros_4 ddpm_cell
+
+* X_ddpm_0 d_clk d_rst data_7 ddpm_1 allzeros_0 clk_1 ddpm_0 allzeros_1 ddpm_cell
+* X_ddpm_1 clk_1 d_rst data_6 ddpm_2 allzeros_1 clk_2 ddpm_1 allzeros_2 ddpm_cell
+* X_ddpm_2 clk_2 d_rst data_5 ddpm_3 allzeros_2 clk_3 ddpm_2 allzeros_3 ddpm_cell
+* X_ddpm_3 clk_3 d_rst data_4 ddpm_4 allzeros_3 clk_4 ddpm_3 allzeros_4 ddpm_cell
+* X_ddpm_4 clk_4 d_rst data_3 ddpm_5 allzeros_4 clk_4 ddpm_4 allzeros_5 ddpm_cell
+* X_ddpm_5 clk_5 d_rst data_2 ddpm_6 allzeros_5 clk_4 ddpm_5 allzeros_6 ddpm_cell
+* X_ddpm_6 clk_6 d_rst data_1 ddpm_7 allzeros_6 clk_4 ddpm_6 allzeros_7 ddpm_cell
+* X_ddpm_7 clk_7 d_rst data_0 ddpm_8 allzeros_7 clk_4 ddpm_7 allzeros_8 ddpm_cell
+
+a_dfxtp_0 ddpm_0 d_clk d_low rst q_net ddpm_out_2inv flop1
+
+** data_7 data_6 data_5 data_4
+a_source [data_3 data_2 data_1 data_0 allzeros_0 ddpm_4] input_vector
+
+*** Input sources descriptions
+v_clk a_clk 0 pulse( 0 'v_dd' 0 'prd/20' 'prd/20' '9*prd/20' prd)
+v_rst a_rst 0 pulse( 0 'v_dd' 50n 0n 0n 5u ) 
+v_high a_high 0 DC 'v_dd'
+v_dac dac_idel 0 DC '14*v_dd/15'
+
+** convert the analog domain <=> digital domain 
+aconverter [a_clk a_rst a_high 0] 
++ 			  [d_clk d_rst d_high d_low] adc_bridge1
+abridge1 [ddpm_0] [a_ddpm_0] dac1
+
+** RC filter for DDPM's output
+R1 a_ddpm_0 dac_out r=100k
+C1 dac_out  0 	c=5n
+
+.param v_dd=0.8
+.param clk_freq = 1e6
+.param prd = '1/clk_freq'
+
+.control
+tran 10n 10m
+listing
+display
+edisplay
+* eprint
+eprvcd d_rst ddpm_out_2inv
++ data_3 data_2 data_1 data_0 
++ d_clk  clk_1  clk_2  clk_3  clk_4
++ ddpm_0 ddpm_1 ddpm_2 ddpm_3 ddpm_4 
++ allzeros_0 allzeros_1 allzeros_2 allzeros_3 
++ > fudi_dac_tb.vcd
+plot  dac_out dac_idel
+.endc
+.GLOBAL d_low
+.END
