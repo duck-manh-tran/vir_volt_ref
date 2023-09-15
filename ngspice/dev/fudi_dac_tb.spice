@@ -44,27 +44,33 @@ x_mux2i_1_0 sel_sig ddpm_in data_in ddpm_out mux2i_1
 .ends
 
 * d_clk <=> clk_0
-** 8-bit dac
-X_ddpm_0 d_clk d_rst data_7 ddpm_1 allzeros_0 clk_1 ddpm_0 allzeros_1 ddpm_cell
-X_ddpm_1 clk_1 d_rst data_6 ddpm_2 allzeros_1 clk_2 ddpm_1 allzeros_2 ddpm_cell
-X_ddpm_2 clk_2 d_rst data_5 ddpm_3 allzeros_2 clk_3 ddpm_2 allzeros_3 ddpm_cell
-X_ddpm_3 clk_3 d_rst data_4 ddpm_4 allzeros_3 clk_4 ddpm_3 allzeros_4 ddpm_cell
-X_ddpm_4 clk_4 d_rst data_3 ddpm_5 allzeros_4 clk_5 ddpm_4 allzeros_5 ddpm_cell
-X_ddpm_5 clk_5 d_rst data_2 ddpm_6 allzeros_5 clk_6 ddpm_5 allzeros_6 ddpm_cell
-X_ddpm_6 clk_6 d_rst data_1 ddpm_7 allzeros_6 clk_7 ddpm_6 allzeros_7 ddpm_cell
-X_ddpm_7 clk_7 d_rst data_0 ddpm_8 allzeros_7 clk_8 ddpm_7 allzeros_8 ddpm_cell
+** 12-bit dac
+X_ddpm_0  d_clk  d_rst data_11 ddpm_1  allzeros_0  clk_1  ddpm_0  allzeros_1 ddpm_cell
+X_ddpm_1  clk_1  d_rst data_10 ddpm_2  allzeros_1  clk_2  ddpm_1  allzeros_2 ddpm_cell
+X_ddpm_2  clk_2  d_rst data_9  ddpm_3  allzeros_2  clk_3  ddpm_2  allzeros_3 ddpm_cell
+X_ddpm_3  clk_3  d_rst data_8  ddpm_4  allzeros_3  clk_4  ddpm_3  allzeros_4 ddpm_cell
+X_ddpm_4  clk_4  d_rst data_7  ddpm_5  allzeros_4  clk_5  ddpm_4  allzeros_5 ddpm_cell
+X_ddpm_5  clk_5  d_rst data_6  ddpm_6  allzeros_5  clk_6  ddpm_5  allzeros_6 ddpm_cell
+X_ddpm_6  clk_6  d_rst data_5  ddpm_7  allzeros_6  clk_7  ddpm_6  allzeros_7 ddpm_cell
+X_ddpm_7  clk_7  d_rst data_4  ddpm_8  allzeros_7  clk_8  ddpm_7  allzeros_8 ddpm_cell
+X_ddpm_8  clk_8  d_rst data_3  ddpm_9  allzeros_8  clk_9  ddpm_8  allzeros_9 ddpm_cell
+X_ddpm_9  clk_9  d_rst data_2  ddpm_10 allzeros_9  clk_10 ddpm_9  allzeros_10 ddpm_cell
+X_ddpm_10 clk_10 d_rst data_1  ddpm_11 allzeros_10 clk_11 ddpm_10 allzeros_11 ddpm_cell
+X_ddpm_11 clk_11 d_rst data_0  ddpm_12 allzeros_11 clk_12 ddpm_11 allzeros_12 ddpm_cell
 
 a_dfxtp_0 ddpm_0 d_clk d_low rst q_net ddpm_out_2inv flop1
 
 ** 
-a_source [allzeros_0 ddpm_8 data_0 data_1 data_2 data_3
-+ data_4 data_5 data_6 data_7] input_vector
+a_source [allzeros_0 ddpm_12 
++ data_0 data_1 data_2 data_3
++ data_4 data_5 data_6 data_7
++ data_8 data_9 data_10 data_11] input_vector
 
 *** Input sources descriptions
 v_clk a_clk 0 pulse( 0 'v_dd' 0 'prd/20' 'prd/20' '9*prd/20' prd)
 v_rst a_rst 0 pulse( 0 'v_dd' 50n 0n 0n 5u ) 
 v_high a_high 0 DC 'v_dd'
-v_dac dac_idel 0 DC '254*v_dd/255'
+v_dac dac_idel 0 DC '4095*v_dd/4096'
 
 ** convert the analog domain <=> digital domain 
 aconverter [a_clk a_rst a_high 0] 
