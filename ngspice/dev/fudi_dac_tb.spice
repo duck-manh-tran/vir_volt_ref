@@ -44,31 +44,27 @@ x_mux2i_1_0 sel_sig ddpm_in data_in ddpm_out mux2i_1
 .ends
 
 * d_clk <=> clk_0
-** 4-bit dac
-X_ddpm_0 d_clk d_rst data_3 ddpm_1 allzeros_0 clk_1 ddpm_0 allzeros_1 ddpm_cell
-X_ddpm_1 clk_1 d_rst data_2 ddpm_2 allzeros_1 clk_2 ddpm_1 allzeros_2 ddpm_cell
-X_ddpm_2 clk_2 d_rst data_1 ddpm_3 allzeros_2 clk_3 ddpm_2 allzeros_3 ddpm_cell
-X_ddpm_3 clk_3 d_rst data_0 ddpm_4 allzeros_3 clk_4 ddpm_3 allzeros_4 ddpm_cell
-
-* X_ddpm_0 d_clk d_rst data_7 ddpm_1 allzeros_0 clk_1 ddpm_0 allzeros_1 ddpm_cell
-* X_ddpm_1 clk_1 d_rst data_6 ddpm_2 allzeros_1 clk_2 ddpm_1 allzeros_2 ddpm_cell
-* X_ddpm_2 clk_2 d_rst data_5 ddpm_3 allzeros_2 clk_3 ddpm_2 allzeros_3 ddpm_cell
-* X_ddpm_3 clk_3 d_rst data_4 ddpm_4 allzeros_3 clk_4 ddpm_3 allzeros_4 ddpm_cell
-* X_ddpm_4 clk_4 d_rst data_3 ddpm_5 allzeros_4 clk_4 ddpm_4 allzeros_5 ddpm_cell
-* X_ddpm_5 clk_5 d_rst data_2 ddpm_6 allzeros_5 clk_4 ddpm_5 allzeros_6 ddpm_cell
-* X_ddpm_6 clk_6 d_rst data_1 ddpm_7 allzeros_6 clk_4 ddpm_6 allzeros_7 ddpm_cell
-* X_ddpm_7 clk_7 d_rst data_0 ddpm_8 allzeros_7 clk_4 ddpm_7 allzeros_8 ddpm_cell
+** 8-bit dac
+X_ddpm_0 d_clk d_rst data_7 ddpm_1 allzeros_0 clk_1 ddpm_0 allzeros_1 ddpm_cell
+X_ddpm_1 clk_1 d_rst data_6 ddpm_2 allzeros_1 clk_2 ddpm_1 allzeros_2 ddpm_cell
+X_ddpm_2 clk_2 d_rst data_5 ddpm_3 allzeros_2 clk_3 ddpm_2 allzeros_3 ddpm_cell
+X_ddpm_3 clk_3 d_rst data_4 ddpm_4 allzeros_3 clk_4 ddpm_3 allzeros_4 ddpm_cell
+X_ddpm_4 clk_4 d_rst data_3 ddpm_5 allzeros_4 clk_5 ddpm_4 allzeros_5 ddpm_cell
+X_ddpm_5 clk_5 d_rst data_2 ddpm_6 allzeros_5 clk_6 ddpm_5 allzeros_6 ddpm_cell
+X_ddpm_6 clk_6 d_rst data_1 ddpm_7 allzeros_6 clk_7 ddpm_6 allzeros_7 ddpm_cell
+X_ddpm_7 clk_7 d_rst data_0 ddpm_8 allzeros_7 clk_8 ddpm_7 allzeros_8 ddpm_cell
 
 a_dfxtp_0 ddpm_0 d_clk d_low rst q_net ddpm_out_2inv flop1
 
-** data_7 data_6 data_5 data_4
-a_source [data_3 data_2 data_1 data_0 allzeros_0 ddpm_4] input_vector
+** 
+a_source [allzeros_0 ddpm_8 data_0 data_1 data_2 data_3
++ data_4 data_5 data_6 data_7] input_vector
 
 *** Input sources descriptions
 v_clk a_clk 0 pulse( 0 'v_dd' 0 'prd/20' 'prd/20' '9*prd/20' prd)
 v_rst a_rst 0 pulse( 0 'v_dd' 50n 0n 0n 5u ) 
 v_high a_high 0 DC 'v_dd'
-v_dac dac_idel 0 DC '14*v_dd/15'
+v_dac dac_idel 0 DC '254*v_dd/255'
 
 ** convert the analog domain <=> digital domain 
 aconverter [a_clk a_rst a_high 0] 
@@ -76,9 +72,9 @@ aconverter [a_clk a_rst a_high 0]
 abridge1 [ddpm_0] [a_ddpm_0] dac1
 
 ** RC filter for DDPM's output
-R1 a_ddpm_0 dac_out r=100k
-C1 dac_out  0 	c=5n
-
+R1 a_ddpm_0 dac_out R = 100k
+C1 dac_out  0 	C = 8n
+.ic v(dac_out)=0.2
 .param v_dd=0.8
 .param clk_freq = 1e6
 .param prd = '1/clk_freq'
@@ -90,12 +86,13 @@ display
 edisplay
 * eprint
 eprvcd d_rst ddpm_out_2inv
-+ data_3 data_2 data_1 data_0 
-+ d_clk  clk_1  clk_2  clk_3  clk_4
-+ ddpm_0 ddpm_1 ddpm_2 ddpm_3 ddpm_4 
++ data_7 data_6 data_5 data_4 data_3 data_2 data_1 data_0 
++ d_clk  clk_1  clk_2  clk_3  clk_4  clk_5  clk_6  clk_7  clk_8
++ ddpm_0 ddpm_1 ddpm_2 ddpm_3 ddpm_4 ddpm_5 ddpm_6 ddpm_7 ddpm_8 
 + allzeros_0 allzeros_1 allzeros_2 allzeros_3 
++ allzeros_4 allzeros_5 allzeros_6 allzeros_7 
 + > fudi_dac_tb.vcd
-plot  dac_out dac_idel
+plot dac_out dac_idel
 .endc
 .GLOBAL d_low
 .END
