@@ -79,25 +79,25 @@ r6 net6 gnd 10k
 .lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 .inc ./../lib/counter.spice
 .inc ./../lib/mux2i_1.spice
-.param clk_freq = 1e6
+.param clk_freq = 0.5e6
 .param prd = '1/clk_freq'
 .param T_set = 0.22m T_on = 0.5m
 .param W = 0.5
 .param V_init = 0.2
-.param v_dd = 0.4
+.param v_dd = 0.555
 .csparam v_dd_ = {v_dd}
 .ic v(VP) = V_init
 .option trtol = 5
 .save vp vp_ a_rst0 a_charge_sw x_rst.bit_sel0 x_rst.bit_sel1 d_rst set_dac_sig
 + ctrl
 + o15 o14 o13 o12 o11 o10 o9 o8 o7 o6 o5 o4 o3 o2 o1 o0
-
+.temp 29
 ** -------------------- end controller descriptions ----------------------- **
 .control
 echo  ______________________________________
 echo |   go to the measurement operation    |
 echo  --------------------------------------
-let NoL = 65536		$ Number of DAC Levels
+let NoL = 4096			$ Number of DAC Levels
 let m = vector(3)		$ storage of DAC m levels
 let n = vector(3)		$ storage of TDC discharge time
 let DAC_vol = vector(3)		$ storage of the DAC voltage
@@ -119,7 +119,7 @@ let dvol2 = DAC_vol[1]-0.01
 stop when set_dac_sig=1  when bit_sel0=1 when bit_sel1=0 when v(VP_)>'$&dvol2'
 stop when set_dac_sig=1  when bit_sel0=0 when bit_sel1=1 when v(ctrl)>'$&half_vdd'
 
-tran 100n 50m
+tran 100n 75m
 
 alter V_DAC dc = dac_vol[0]
 resume

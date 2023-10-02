@@ -5,16 +5,19 @@ import numpy as np
 import math
 
 def main():
-	r=1.5
-	N = 16
+	r = 1.25
+	N = 12
 	k = np.array([0.4, 0.3, 0.25])
 	m = np.array([0, 0, 0])
 	if (sys.argv[1] == "0"):
 		print(round(r * k[0] * 2**N))
+#		print(format(round(r * k[0] * 2**N), '012b'))
 	if (sys.argv[1] == "1"):
 		print(round(r * k[1] * 2**N))
+#		print(format(round(r * k[1] * 2**N), '012b'))
 	if (sys.argv[1] == "2"):
 		print(round(r * k[2] * 2**N))
+#		print(format(round(r * k[2] * 2**N), '012b'))
 	if (sys.argv[1] == "3"):
 		m_ref = get_m_set(get_discharge_val(), r, N)
 		print(m_ref)
@@ -52,7 +55,7 @@ def get_discharge_val():
 	outfile = " tmp.txt"
 	pos_ = []
 	for ix in range(3):
-		cmd1 = "awk \'{if($3 == \"1s\" || $4 == \"1s\" || $5 == \"1s\"){$1=\"\"; print $0;}}\'"
+		cmd1 = "awk \'{if($2 == \"1s\" || $2 == \"0s\"){$1=\"\"; print $0;}}\'"
 		cmd1 = cmd1 + infile[ix] + " > " + outfile
 		# print (cmd1)
 		os.system(cmd1)
@@ -71,6 +74,7 @@ def get_discharge_val():
 		# print (cmd)
 		input2 = os.popen(cmd).read()
 		n_val.append(int(input2, 2))
+	np.savetxt('discharge_cnt.txt', n_val, fmt='%d')
 	return n_val
 
 main()
