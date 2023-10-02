@@ -1,8 +1,0 @@
-* Time  	z	d  d 	d 	d 	d  d 	d 	d 	d  d 	d 	d 	d 
-* 	 	  	e 	d  a 	a 	a 	a  a 	a 	a 	a  a 	a 	a 	a 
-* 	 	  	r 	p  t 	t 	t 	t  t 	t 	t 	t  t 	t 	t 	t 
-* 	 	  	o	m  a 	a 	a 	a  a 	a 	a 	a  a 	a 	a 	a 
-* 	 	  	0 	12 0 	1 	2 	3  4 	5 	6	7  8 	9 	10	11
-0.000000	1s	0s Uu Uu Us Uu Uu Uu Us Uu Uu Uu Us Uu
-5.000e-6	1s 0s 1s 1s 1s 1s 1s 1s 1s 1s 1s 1s 1s 1s
-1.000e-2	1s 0s 1s 1s 1s 1s 1s 1s 1s 1s 1s 1s 1s 1s
