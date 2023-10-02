@@ -1,6 +1,7 @@
 ** sch_path: /home/manhtd_61d/work/d_bgr/xschem/discharge_nwk.sch
 **.subckt discharge_nwk
-.subckt discharge_nwk ctrl _VP_ VGND W=0.5
+
+.subckt discharge_nwk0 ctrl _VP_ VGND W=0.5
 XM1 net3 net3 _VP_ _VP_ sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
 XM2 net2 net2 net1 net1 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
 XM3 net1 net1 net3 net3 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1 
@@ -9,23 +10,113 @@ XM5 netk netk net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
 XC1 _VP_ VGND sky130_fd_pr__cap_mim_m3_2 W=14.5 L=1.5 MF=10 m=10
 XMk netk ctrl VGND VGND sky130_fd_pr__nfet_01v8 L=0.15 W=2 nf=2
 .ends
-X_discharge_nwk ctrl VP GND discharge_nwk W=W
+
+.subckt discharge_nwk1 ctrl _VP_ VGND W=0.5
+XM1 net3 net3 _VP_ _VP_ sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM2 net2 net2 net1 net1 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM3 net1 net1 net3 net3 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1 
+XM4 net4 net4 net2 net2 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+XM5 netk netk net4 net4 sky130_fd_pr__pfet_01v8 L=0.15 W="W" nf=1
+Xsky130_fd_pr__cap_vpp0 _VP_ VGND VGND VGND sky130_fd_pr__cap_vpp_11p5x11p7_m1m2m3m4_shieldl1m5 m=1
+Xsky130_fd_pr__cap_vpp1 _VP_ VGND VGND VGND sky130_fd_pr__cap_vpp_11p5x11p7_m1m2m3m4_shieldl1m5 m=1
+Xsky130_fd_pr__cap_vpp2 _VP_ VGND VGND VGND sky130_fd_pr__cap_vpp_11p5x11p7_m1m2m3m4_shieldl1m5 m=1
+Xsky130_fd_pr__cap_vpp3 _VP_ VGND VGND VGND sky130_fd_pr__cap_vpp_11p5x11p7_m1m2m3m4_shieldl1m5 m=1
+XMk netk ctrl VGND VGND sky130_fd_pr__nfet_01v8 L=0.15 W=2 nf=2
+.ends
+
+* X_discharge_nwk0 ctrl VP0 GND discharge_nwk0 W=W
+X_discharge_nwk1 ctrl VP1 GND discharge_nwk1 W=W
 **** begin user architecture code
 
 .lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 .param W = 0.5
-.param V_init = 0.81
-.param v_dd = 0.6
-.ic v(VP) = V_init
+*.param V_init = 0.8
+.param v_dd = 0.81 
+*.ic v(VP0) = V_init
+.ic v(VP1) = v_dd
 
 V_ctrl ctrl gnd dc='v_dd'
 .control
-save VP
-tran 100n 31m
-print VP > time2vol.txt
-write discharge_nwk.raw
-.endc
+set num_threads=4
+* plot VP1
+* print VP1 > time2vol.txt
+let ix=0
+* voltage sweept
+* set raw_file < infile_vol.txt
+* while ix<7
+* 	let set_vol = 0.4 + ix*0.1
+* 	alterparam v_dd = '$&set_vol'
+* 	reset
+* 	save VP1 ctrl 
+* 	tran 100n 40m
+* 	let ix = ix+1
+* 	write ./result/vol/$raw_file[$&ix]
+* end
+* temp sweept
 
+set raw_file < rawfile_temp.txt
+set txt_file < txtfile_temp.txt
+save VP1 ctrl
+while ix<5
+	let set_temp = ix*2
+	set temp = '$&set_temp'
+	tran 100n 200m
+	let ix = ix+1
+	write ./result/temp/raw/$raw_file[$&ix]
+	print VP1 > ./result/temp/text/$txt_file[$&ix]
+end
+while ix<10
+	let set_temp = ix*2
+	set temp = '$&set_temp'
+	tran 100n 100m
+	let ix = ix+1
+	write ./result/temp/raw/$raw_file[$&ix]
+	print VP1 > ./result/temp/text/$txt_file[$&ix]
+end
+* while ix<15
+* 	let set_temp = ix*2
+* 	set temp = '$&set_temp'
+* 	tran 100n 50m
+* 	let ix = ix+1
+* 	write ./result/temp/raw/$raw_file[$&ix]
+* 	print VP1 > ./result/temp/text/$txt_file[$&ix]
+* end
+* while ix<20
+* 	let set_temp = ix*2
+* 	set temp = '$&set_temp'
+* 	tran 50n 30m
+* 	let ix = ix+1
+* 	write ./result/temp/raw/$raw_file[$&ix]
+* 	print VP1 > ./result/temp/text/$txt_file[$&ix]
+* end
+* 
+* while ix<30
+* 	let set_temp = ix*2
+* 	set temp = '$&set_temp'
+* 	tran 20n 10m
+* 	let ix = ix+1
+* 	write ./result/temp/raw/$raw_file[$&ix]
+* 	print VP1 > ./result/temp/text/$txt_file[$&ix]
+* end
+* while ix<40
+* 	let set_temp = ix*2
+* 	set temp = '$&set_temp'
+* 	tran 10n 5m
+* 	let ix = ix+1
+* 	write ./result/temp/raw/$raw_file[$&ix]
+* 	print VP1 > ./result/temp/text/$txt_file[$&ix]
+* end
+* while ix<51
+* 	let set_temp = ix*2
+* 	set temp = '$&set_temp'
+* 	tran 5n 2m
+* 	let ix = ix+1
+* 	write ./result/temp/raw/$raw_file[$&ix]
+* 	print VP1 > ./result/temp/text/$txt_file[$&ix]
+* end
+
+plot VP1
+.endc
 
 **** end user architecture code
 **.ends
