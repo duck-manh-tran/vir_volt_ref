@@ -1,0 +1,52 @@
+** counter.spice
+
+.subckt counter_16b clk d_low d_rst d0 d1 d2 d3 d4 d5 d6
++ d7 d8 d9 d10 d11 d12 d13 d14 d15
+a_dff1 d0 clk d_low d_rst q0 d0 flop1
+a_dff2 d1 q0 d_low d_rst q1 d1 flop1
+a_dff3 d2 q1 d_low d_rst q2 d2 flop1
+a_dff4 d3 q2 d_low d_rst q3 d3 flop1
+a_dff5 d4 q3 d_low d_rst q4 d4 flop1
+a_dff6 d5 q4 d_low d_rst q5 d5 flop1
+a_dff7 d6 q5 d_low d_rst q6 d6 flop1
+a_dff8 d7 q6 d_low d_rst q7 d7 flop1
+a_dff9 d8 q7 d_low d_rst q8 d8 flop1
+a_dff10 d9 q8 d_low d_rst q9 d9 flop1
+a_dff11 d10 q9 d_low d_rst q10 d10 flop1
+a_dff12 d11 q10 d_low d_rst q11 d11 flop1
+a_dff13 d12 q11 d_low d_rst q12 d12 flop1
+a_dff14 d13 q12 d_low d_rst q13 d13 flop1
+a_dff15 d14 q13 d_low d_rst q14 d14 flop1
+a_dff16 d15 q14 d_low d_rst q15 d15 flop1
+.model flop1 d_dff(clk_delay = 13.0e-9 set_delay = 25.0e-9
++ reset_delay = 27.0e-9 ic = 2 rise_delay = 10.0e-9
++ fall_delay = 3e-9)
+.ends
+
+
+.subckt counter_12b clk d_low d_rst d8 d9 d10 d11
+a_dff1 d0 clk d_low d_rst q0 d0 flop1
+a_dff2 d1 q0 d_low d_rst q1 d1 flop1
+a_dff3 d2 q1 d_low d_rst q2 d2 flop1
+a_dff4 d3 q2 d_low d_rst q3 d3 flop1
+a_dff5 d4 q3 d_low d_rst q4 d4 flop1
+a_dff6 d5 q4 d_low d_rst q5 d5 flop1
+a_dff7 d6 q5 d_low d_rst q6 d6 flop1
+a_dff8 d7 q6 d_low d_rst q7 d7 flop1
+a_dff9 d8 q7 d_low d_rst q8 d8 flop1
+a_dff10 d9 q8 d_low d_rst q9 d9 flop1
+a_dff11 d10 q9 d_low d_rst q10 d10 flop1
+a_dff12 d11 q10 d_low d_rst q11 d11 flop1
+.model flop1 d_dff(clk_delay = 13.0e-9 set_delay = 25.0e-9
++ reset_delay = 27.0e-9 ic = 2 rise_delay = 10.0e-9
++ fall_delay = 3e-9)
+.ends
+
+.subckt counter_2b clk d_low d_rst d0 d1
+a_dff1 d0 clk d_low d_rst q0 d0 flop1
+a_dff2 d1 q0 d_low d_rst q1 d1 flop1
+.model flop1 d_dff(clk_delay = 13.0e-9 set_delay = 25.0e-9
++ reset_delay = 27.0e-9 ic = 2 rise_delay = 10.0e-9
++ fall_delay = 3e-9)
+.ends
+

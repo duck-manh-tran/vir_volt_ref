@@ -1,0 +1,14 @@
+* this is the mux2i_1 in xspice
+
+.subckt mux2i_1 sel in0 in1 out 
+ai1 sel sel_bar inv1
+aa1 [sel_bar in0] out0 and1
+aa2 [sel in1] out1 and1
+ao2 [out0 out1] out or1
+.model inv1 d_inverter(rise_delay = 0.5e-9 fall_delay = 0.3e-9
++ input_load = 0.5e-12)
+.model and1 d_and(rise_delay = 0.5e-9 fall_delay = 0.3e-9
++ input_load = 0.5e-12)
+.model or1 d_or(rise_delay = 0.5e-9 fall_delay = 0.3e-9
++ input_load = 0.5e-12)
+.ends

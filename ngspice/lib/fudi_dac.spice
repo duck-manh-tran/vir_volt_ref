@@ -1,0 +1,44 @@
+* the design of fully synthesizable DAC.
+
+** circuit description of the isolated buffer
+.subckt isobuf1 A sleep X
+a_inv1_0 sleep sleep_bar inv1
+a_and1_0 [A sleep_bar] X and1
+.ends
+
+** circuit description of the mux2i
+.subckt mux2i_1 sel in0 in1 out
+ai1 sel sel_bar inv1
+aa1 [sel_bar in0] out0 and1
+aa2 [sel in1] out1 and1
+ao2 [out0 out1] out or1
+.ends
+
+** circuit description of the ddpm_cell
+.subckt ddpm_cell clk_in rst data_in ddpm_in allzeros_in 
++ clk_out ddpm_out allzeros_out
+a_dff1_0 d0 clk_in d_low rst clk_out d0 flop1
+x_isobuf1_0 allzeros_in clk_out allzeros_out isobuf1
+a_and1_0 [allzeros_in clk_out] sel_sig and1
+x_mux2i_1_0 sel_sig ddpm_in data_in ddpm_out mux2i_1
+.ends
+
+* d_clk <=> clk_0
+.subckt ddpm_dac clk_0 rst ddpm_12 allzeros_0
++ data_0 data_1 data_2 data_3 data_4 data_5
++ data_6 data_7 data_8 data_9 data_10 data_11 ddpm_0
+** 12-bit dac 	  data_0 <=> MSB
+X_ddpm_0  clk_0  rst data_0  ddpm_1  allzeros_0  clk_1  ddpm_0  allzeros_1 ddpm_cell
+X_ddpm_1  clk_1  rst data_1  ddpm_2  allzeros_1  clk_2  ddpm_1  allzeros_2 ddpm_cell
+X_ddpm_2  clk_2  rst data_2  ddpm_3  allzeros_2  clk_3  ddpm_2  allzeros_3 ddpm_cell
+X_ddpm_3  clk_3  rst data_3  ddpm_4  allzeros_3  clk_4  ddpm_3  allzeros_4 ddpm_cell
+X_ddpm_4  clk_4  rst data_4  ddpm_5  allzeros_4  clk_5  ddpm_4  allzeros_5 ddpm_cell
+X_ddpm_5  clk_5  rst data_5  ddpm_6  allzeros_5  clk_6  ddpm_5  allzeros_6 ddpm_cell
+X_ddpm_6  clk_6  rst data_6  ddpm_7  allzeros_6  clk_7  ddpm_6  allzeros_7 ddpm_cell
+X_ddpm_7  clk_7  rst data_7  ddpm_8  allzeros_7  clk_8  ddpm_7  allzeros_8 ddpm_cell
+X_ddpm_8  clk_8  rst data_8  ddpm_9  allzeros_8  clk_9  ddpm_8  allzeros_9 ddpm_cell
+X_ddpm_9  clk_9  rst data_9  ddpm_10 allzeros_9  clk_10 ddpm_9  allzeros_10 ddpm_cell
+X_ddpm_10 clk_10 rst data_10 ddpm_11 allzeros_10 clk_11 ddpm_10 allzeros_11 ddpm_cell
+X_ddpm_11 clk_11 rst data_11 ddpm_12 allzeros_11 clk_12 ddpm_11 allzeros_12 ddpm_cell
+.ends
+
