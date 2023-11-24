@@ -28,7 +28,8 @@ XMk netk ctrl VGND VGND sky130_fd_pr__nfet_01v8 L=0.15 W=2 nf=2
 X_discharge_nwk1 ctrl VP1 GND discharge_nwk1 W=W
 **** begin user architecture code
 
-.lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+*.lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.lib /home/dkits/efabless/mpw-7a/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 .param W = 0.5
 *.param V_init = 0.8
 .param v_dd = 0.81 

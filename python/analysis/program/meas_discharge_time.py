@@ -2,12 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 def main():
-	 for ix in range(file_range):
-		  infile = "result/temp/text/discharge_nwk_" + str(20+ix*2) + "C.txt"
-		  cmd="sed -e '/\o14/d' -e '/sch_path:/d' -e '/---/d' -e '/Index/d' -e '/Transient/d' -i " + infile
-		  os.system(cmd)
-	 
-
     # load data from txt file to python
 
     filename = 'time2vol.txt'

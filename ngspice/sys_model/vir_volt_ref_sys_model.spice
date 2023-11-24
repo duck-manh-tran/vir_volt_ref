@@ -76,7 +76,8 @@ r6 net6 gnd 10k
 *input sources resistance
 
 * Setup simulation 
-.lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+*.lib ~/work/conda_eda/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.lib /home/dkits/efabless/mpw-7a/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 .inc ./../lib/counter.spice
 .inc ./../lib/mux2i_1.spice
 .param clk_freq = 0.5e6

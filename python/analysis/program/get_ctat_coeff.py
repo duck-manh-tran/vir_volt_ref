@@ -6,7 +6,7 @@ import math
 def main():
 # Measurement process
 
-    filename = 'time2vol.txt'
+    filename = 'result/temp/l180nm/nf_6/discharge_curve_27C.txt'
     data = np.loadtxt(filename, delimiter='\t', skiprows=1, dtype=str)
     index = list(map(int, data[:,0]))
     time = list(map(float, data[:,1]))
@@ -34,14 +34,19 @@ def main():
                 v_start = VDD[iv] * m_[im]
                 v_stop = VDD[iv] * k_thres
                 n[im] = round (pow(10, 6) * meas_discharge_time (time, capa, v_start, v_stop))
-            y_ = math.exp( (n[0] - n[1])/(n[1] - n[2]) + 4 )
+            y_ = math.exp( (n[0] - n[1])/(n[2] - 1) - 2)
+# y_ = math.exp( (n[0] - n[1])/(n[1]-n[2]) )
             y.append(round (y_, 2))
     y_bar = [ 1/item for item in y ]
     # yt = np.reshape (y, (5, 26))
     # print (yt)
     result = list(zip(r_cap, y, r))
     np.savetxt(f"data.txt", result, fmt='%10.6f', delimiter='\t')
-    plotting3d(r_cap, y, r)
+    ax = plt.figure().add_subplot(projection='3d')
+    ax.scatter(r_cap, y, r, linewidth=0.2, antialiased=True)
+    plt.show()
+
+#    plotting3d(r_cap, y, r)
 
 # curve fitting process
 
@@ -97,9 +102,9 @@ def main():
     ax.plot_surface(XX, YY, ZZ, rstride=1, cstride=1, alpha=0.2, linewidth=0.5, edgecolor='b')
     ax.axis('tight')
     ax.view_init(azim=-60.0, elev=30.0)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+    ax.set_xlabel('r_cap')
+    ax.set_ylabel('Yctat')
+    ax.set_zlabel('r = 1/VDD')
     plt.show()
 
 def exp2model(e):

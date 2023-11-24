@@ -5,7 +5,7 @@ import numpy as np
 import math
 
 def main():
-	r = 1.25
+	r = 1.5
 	N = 12
 	k = np.array([0.4, 0.3, 0.25])
 	m = np.array([0, 0, 0])
@@ -48,7 +48,6 @@ def get_m_set(n_val, r_, N):
 	# 		 + C[15]*X**5 + C[16]*X**4*Y + C[17]*X**3*Y**2 + C[18]*X**2*Y**3 + C[19]*X*Y**4 + C[20]*Y**5 \
 	# 		 + C[21]*X**6 + C[22]*X**5*Y + C[23]*X**4*Y**2 + C[24]*X**3*Y**3 + C[25]*X**2*Y**4 + C[26]*X*Y**5 + C[27]*Y**6 \
 	# 
-
 
 def get_discharge_val():
 	infile = [" stop1.txt", " stop2.txt", " stop3.txt"]
