@@ -1,9 +1,5 @@
 simulate:
-	mkdir result
-	mkdir result/temp
-	mkdir result/temp/l180nm
-	mkdir result/temp/l180nm/nf_6
-	mkdir result/temp/l180nm/nf_6/cleaned_data
+	mkdir -p result/temp/l180nm/nf_6/cleaned_data
 	python3 program/ctrl_simulations.py 
 
 filtering_data:

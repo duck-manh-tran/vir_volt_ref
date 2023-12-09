@@ -35,7 +35,7 @@ X_discharge_nwk ctrl VP1 GND discharge_nwk W=W L=L
 * X_discharge_nwk1 ctrl VP1 GND discharge_nwk1 W=W
 **** begin user architecture code
 
-.lib /home/dkits/efabless/mpw-7a/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice hh
+.lib /home/dkits/efabless/mpw-7a/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 .param W = 1
 .param L = 0.18
 .param V_init = 0.81

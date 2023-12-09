@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from scipy.linalg import lstsq
 import numpy as np
 import math
