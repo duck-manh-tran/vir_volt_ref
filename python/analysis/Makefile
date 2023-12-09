@@ -6,7 +6,6 @@ filtering_data:
 	python3 program/clean_data.py
 	python3 program/get_discharge_time_at_all_temps_sweep_points.py
 	python3 program/get_discharge_time_all.py	
-
 volt:
 	python3 program/analysis_volt.py
 temp:

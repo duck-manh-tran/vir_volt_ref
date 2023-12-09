@@ -48,7 +48,7 @@ def get_discharge_time_all_temps_sweep_points():
 	ipoints= np.array(ipoints)
 	stacked_data = np.column_stack ((t_dis, temps, VDDs, ipoints)) 
 	filtered_data = sorted(stacked_data, key=lambda x: x[3])	
-	outfile = "result/temp/l150nm/filtered_data.txt"
+	outfile = "result/temp/l180nm/nf_6/filtered_data.txt"
 	np.savetxt(outfile, filtered_data, delimiter='\t', fmt='%10.6f')
 
 def get_discharge_time_all_VDDs_sweep_points(temp):

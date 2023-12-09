@@ -9,10 +9,10 @@ def main():
 	plt.show()
 
 def analysis():
-	data_temp_10 = np.loadtxt("result/volt/text/sweep_ipoint_temp_10C.txt", delimiter='\t')
-	data_temp_30 = np.loadtxt("result/volt/text/sweep_ipoint_temp_30C.txt", delimiter='\t')
-	data_temp_60 = np.loadtxt("result/volt/text/sweep_ipoint_temp_60C.txt", delimiter='\t')
-	data_temp_90 = np.loadtxt("result/volt/text/sweep_ipoint_temp_90C.txt", delimiter='\t')
+	data_temp_10 = np.loadtxt("result/temp/l180nm/nf_6/sweep_ipoint_temp_10C.txt", delimiter='\t')
+	data_temp_30 = np.loadtxt("result/temp/l180nm/nf_6/sweep_ipoint_temp_30C.txt", delimiter='\t')
+	data_temp_60 = np.loadtxt("result/temp/l180nm/nf_6/sweep_ipoint_temp_60C.txt", delimiter='\t')
+	data_temp_90 = np.loadtxt("result/temp/l180nm/nf_6/sweep_ipoint_temp_90C.txt", delimiter='\t')
 
 	data = data_temp_90
 
