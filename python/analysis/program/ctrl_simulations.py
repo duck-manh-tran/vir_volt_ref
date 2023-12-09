@@ -15,7 +15,7 @@ step_time = [round(10**6 * stop_time[ix]/number_points) for ix in range(len(stop
 
 end_dir = " result/temp/l180nm"
 prefix = "discharge_curve_"
-for ix in range(10):
+for ix in range(50):
 	cmd = 'ngspice discharge_nwk_180nm.spice'
 	temp = ix*2
 	
