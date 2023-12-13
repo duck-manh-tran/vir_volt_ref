@@ -1,7 +1,7 @@
 # virtual_voltage_reference
 This is the repo of the project of the vitual voltage reference 
 
-I.Analyze discharge behavior /n
+I.Analyze discharge behavior__
 please go to the dir: ./python/analysis
 
 1. Run discharge_network simulations:
