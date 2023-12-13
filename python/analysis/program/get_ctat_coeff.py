@@ -39,7 +39,9 @@ def main():
 	
 		plt.show()
 	else:
-		print ("Please select your option")
+		print ("Please select your option:")
+		print ("option_1:get_points")
+		print ('option_2:fit_mesh')
 
 def get_ctat_points(filename):
 	data = np.loadtxt(filename, delimiter='\t', skiprows=1, dtype=str)
