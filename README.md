@@ -16,7 +16,7 @@ please go to the dir: ./python/analysis
 	
 4. Generate CTAT points and fit to a mesh:  
 	python3 program/get_ctat_coeff.py get_points  
-	python3 program/get_ctat_coeff.py fit_mesh
-   	Or
+	python3 program/get_ctat_coeff.py fit_mesh  
+   	Or  
    	make filtering_data  
    	make fit_mesh  
