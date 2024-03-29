@@ -1,0 +1,37 @@
+** sch_path: /home/userdata/k61D/manhtd_61d/git/vir_volt_ref/xschem/tb/dschr_nwk_2t_type_b_tb.sch
+**.subckt dschr_nwk_2t_type_b_tb
+C1 vp GND 50f m=1
+x1 vp GND dschr_nwk_2t_type_b L=0.15 W=0.5
+**** begin user architecture code
+
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include /home/dkits/openpdks/sky130A/libs.tech/ngspice/corners/tt.spice
+.include /home/dkits/openpdks/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical.spice
+.include /home/dkits/openpdks/sky130A/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice
+.include /home/dkits/openpdks/sky130A/libs.tech/ngspice/corners/tt/specialized_cells.spice
+
+
+
+.include /home/userdata/k61D/manhtd_61d/git/vir_volt_ref/xschem/netlists/ctrl_sims.spice
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  dschr_nwks/dschr_nwk_2t_type_b.sym # of pins=2
+** sym_path: /home/userdata/k61D/manhtd_61d/git/vir_volt_ref/xschem/dschr_nwks/dschr_nwk_2t_type_b.sym
+** sch_path: /home/userdata/k61D/manhtd_61d/git/vir_volt_ref/xschem/dschr_nwks/dschr_nwk_2t_type_b.sch
+.subckt dschr_nwk_2t_type_b top bot  L=0.18 W=1
+*.iopin top
+*.iopin bot
+XM1 top bot net1 bot sky130_fd_pr__nfet_01v8 L='L' W='W' nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W'
++ sa=0 sb=0 sd=0 mult=1 m=1
+XM2 net1 bot bot bot sky130_fd_pr__nfet_01v8 L='L' W='W' nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W'
++ sa=0 sb=0 sd=0 mult=1 m=1
+.ends
+
+.GLOBAL GND
+.end
