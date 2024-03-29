@@ -1,0 +1,21 @@
+.param ic_vp=0.81
+.ic v(vp)=ic_vp
+
+
+.control
+	set num_threads=4
+	let v_init = $v_init
+	let vdd = $vdd
+	let v_thres = vdd/4
+	let ic_vp1 = $&v_init+0.01
+	alterparam ic_vp = $&ic_vp1
+	reset
+
+	tran $step_time $stop_time
+	let t_dis=time
+	meas tran t1 trig vp val=v_init fall=1 targ vp val=v_thres fall=1
+	let t_dis=t1
+	echo $&vdd   $&v_init   $&t_dis >> tmp.txt
+*	plot vp
+	quit
+.endc
