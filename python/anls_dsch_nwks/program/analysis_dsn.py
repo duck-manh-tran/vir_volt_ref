@@ -3,12 +3,18 @@ import os
 import matplotlib.pyplot as plt
 
 def main():
-	model = 'dschr_nwk_2t_type_b'
+	model = 'dschr_nwk_1t_type_a'
 	vdds = np.arange(0.4, 0.81, 0.05)
 	inits = np.arange(0.3, 1.01, 0.1)
 #	simulation(model, 0.8, 0.8, 1000, 110)
-	multi_sims(model, vdds, inits)	
-	show_graph(model, vdds, inits)
+	if (os.path.exists('results/' + model + '.txt')):
+		print ('load data from result file')
+		show_graph(model, vdds, inits)
+	else:
+		print ('result file is not exist, run simulations')
+		multi_sims(model, vdds, inits)			
+		show_graph(model, vdds, inits)
+
 	plt.show()
 
 
