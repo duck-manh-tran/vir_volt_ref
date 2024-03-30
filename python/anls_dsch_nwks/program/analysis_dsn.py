@@ -13,14 +13,13 @@ def main():
 
 
 def multi_sims(model, vdds, inits):
-	model = 'dschr_nwk_1t_type_a'
 	stop = 105		#ms
 	step = 200		#ns
 	os.system ('rm tmp.txt')
 	for vdd in vdds:
 		for init in inits:
 			simulation(model, vdd, vdd*init, step, stop)
-	cmd = 'mv tmp.txt results/' + model + '.txt'
+	cmd = 'cp tmp.txt results/' + model + '.txt'
 	os.system(cmd)	
 
 
