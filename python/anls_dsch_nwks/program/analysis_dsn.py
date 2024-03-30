@@ -37,9 +37,13 @@ def show_graph(model, vdds, inits):
 	print (data3d)	
 	for ix in range(len(vdds)):
 		t_dis = data3d [ix,:,2]
+		t_dis = t_dis * 1e3
 		plt.figure(1)
 		plt.plot(inits, t_dis)	
 		plt.grid()
+	plt.title('Discharge time analysis of the ' + model)
+	plt.xlabel('V_init / VDD')
+	plt.ylabel('Discharge time (ms)')
 
 def simulation (model, vdd, v_init, step, stop):
 	cmd = 'ngspice '
