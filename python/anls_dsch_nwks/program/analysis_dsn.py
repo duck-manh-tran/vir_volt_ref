@@ -17,6 +17,20 @@ def main():
 
 	plt.show()
 
+def get_sim_time(model):
+       vdd = 0.4
+       v_init = 0.8
+       step = 1000
+       stop = 100
+
+       os.system ('rm tmp.txt')
+       simulation(model, vdd, v_init, step, stop)
+       data = np.loadtxt('tmp.txt', dtype=float)
+       sim_time = data[2];
+       print (data)
+
+
+ def simulation (model, vdd, v_init, step, stop):
 
 def multi_sims(model, vdds, inits):
 	stop = 105		#ms
