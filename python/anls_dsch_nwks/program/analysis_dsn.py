@@ -1,36 +1,77 @@
 import numpy as np
 import os
+import csv
 import matplotlib.pyplot as plt
 
 def main():
-	model = 'dschr_nwk_1t_type_a'
+	lib = 'tsmc65_hspice'
+#	lib = 'sky130a_ngspice'
+#	lib = 'sky130a_spectre'	
+
+	model = 'dschr_nwk_type_a'
 	vdds = np.arange(0.4, 0.81, 0.05)
 	inits = np.arange(0.3, 1.01, 0.1)
+
 #	simulation(model, 0.8, 0.8, 1000, 110)
-	if (os.path.exists('results/' + model + '.txt')):
+
+	if (os.path.exists('results/' + lib + '/' + model + '.txt')):
 		print ('load data from result file')
-		show_graph(model, vdds, inits)
 	else:
 		print ('result file is not exist, run simulations')
-		multi_sims(model, vdds, inits)			
-		show_graph(model, vdds, inits)
-
+		if (lib == 'tsmc65_hspice'):
+			hspice_sim(model)
+		elif (lib == 'sky130a_ngspice'):
+			multi_sims(model, vdds, inits)			
+		elif (lib == 'sky130a_spectre'):
+			print ('spectre is running')
+	show_graph(lib, model, vdds, inits)
 	plt.show()
 
+
+def spectre_sim():
+	print ('spectre')
+
+def hspice_sim (model):
+	lib = 'tsmc65_hspice'
+	cmd = 'hspice '
+	inpfile = 'netlists/' + lib + '/' + model + '_tb.spice'
+	outfile = 'results/' + lib + '/' + model + '.txt'
+	rawfile = 'results/' + lib + '/raw/' + model + '_tb'
+	arg1 = " -i " + inpfile
+	arg2 = " -o " + rawfile
+	cmd = cmd + arg1 + arg2
+	print (cmd)
+	os.system (cmd)
+
+	print ('processing RAW file')	
+	rawfile = rawfile+'.mt0.csv'
+	array = []
+	arr = []
+	with open(rawfile, 'r') as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if ((len(row) == 6) & (row[0] != 'index')):
+				val = np.array(row)
+				val = val.astype(np.float)
+				array.append(val)
+
+	array = np.array(array)
+	arr = np.vstack ((array[:,1], array[:,2], array[:, 3])).T
+	np.savetxt(outfile, arr)	
+
+
 def get_sim_time(model):
-       vdd = 0.4
-       v_init = 0.8
-       step = 1000
-       stop = 100
+	vdd = 0.4
+	v_init = 0.8
+	step = 1000
+	stop = 100
+	
+	os.system ('rm tmp.txt')
+	simulation(model, vdd, v_init, step, stop)
+	data = np.loadtxt('tmp.txt', dtype=float)
+	sim_time = data[2];
+	print (data)
 
-       os.system ('rm tmp.txt')
-       simulation(model, vdd, v_init, step, stop)
-       data = np.loadtxt('tmp.txt', dtype=float)
-       sim_time = data[2];
-       print (data)
-
-
- def simulation (model, vdd, v_init, step, stop):
 
 def multi_sims(model, vdds, inits):
 	stop = 105		#ms
@@ -43,8 +84,8 @@ def multi_sims(model, vdds, inits):
 	os.system(cmd)	
 
 
-def show_graph(model, vdds, inits):
-	filename_ = 'results/' + model + '.txt'
+def show_graph(lib, model, vdds, inits):
+	filename_ = 'results/' + lib + '/' + model + '.txt'
 	data = np.loadtxt(filename_, dtype=float)
 	print (data)
 	data3d = data.reshape((len(vdds), len(inits), 3))
@@ -55,13 +96,13 @@ def show_graph(model, vdds, inits):
 		plt.figure(1)
 		plt.plot(inits, t_dis)	
 		plt.grid()
-	plt.title('Discharge time analysis of the ' + model)
+	plt.title('Discharge time analysis of the ' + model + ' ' + lib)
 	plt.xlabel('V_init / VDD')
 	plt.ylabel('Discharge time (ms)')
 
 def simulation (model, vdd, v_init, step, stop):
 	cmd = 'ngspice '
-	model = ' netlists/' + model + '_tb.spice'
+	model = ' netlists/sky130a_ngspice/' + model + '_tb.spice'
 	arg1 = " -D vdd=" + str(vdd)
 	arg2 = " -D v_init=" + str(v_init)
 	arg3 = " -D step_time=" + str(step) + "n"
