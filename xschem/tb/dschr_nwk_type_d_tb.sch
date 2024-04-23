@@ -28,4 +28,4 @@ m=1
 value=50f
 footprint=1206
 device="ceramic capacitor"}
-C {dschr_nwks/dschr_nwk_1t_type_d.sym} -20 60 0 0 {name=x2 L=0.18 W=1}
+C {dschr_nwks/dschr_nwk_type_d.sym} -20 60 0 0 {name=x2 L=0.18 W=1}
