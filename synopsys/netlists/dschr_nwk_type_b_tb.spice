@@ -1,0 +1,46 @@
+*  Generated for: HSPICE
+*  Design library name: vir_volt_ref
+*  Design cell name: dschr_nwk_type_b
+*  Design view name: schematic
+.option search='/home/dkits/tsmc_65/65MSRFGP_PDK/pdk_rf_1p9m_6X1Z1U/models/hspice'
+
+
+.option PARHIER = LOCAL
+.option PORT_VOLTAGE_SCALE_TO_2X = 1
+
+.option WDF=1
+.temp 25
+.lib 'crn65gplus_2d5_lk_v1d0.l' TT
+*Custom Compiler Version O-2018.09-SP1-3
+*Sat May  4 11:27:06 2024
+
+.global gnd!
+********************************************************************************
+* Library          : vir_volt_ref
+* Cell             : dschr_nwk_type_b
+* View             : schematic
+* View Search List : hspice hspiceD schematic spice veriloga
+* View Stop List   : hspice hspiceD
+********************************************************************************
+m1 vp gnd! net10 gnd! nch l=0.18u w=0.5u m=1 nf=1 sd=0.2u ad=8.75e-14 as=8.75e-14
++ pd=1.35e-06 ps=1.35e-06 nrd=0.2 nrs=0.2 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m0 net10 gnd! gnd! gnd! nch l=0.18u w=0.5u m=1 nf=1 sd=0.2u ad=8.75e-14 as=8.75e-14
++ pd=1.35e-06 ps=1.35e-06 nrd=0.2 nrs=0.2 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+c1 vp gnd! c=100f
+
+
+
+
+
+
+
+
+.include ctrl_sims.spice
+
+.option opfile=1 split_dp=1
+.option probe=1
+
+
+
+
+.end
