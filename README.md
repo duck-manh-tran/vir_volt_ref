@@ -1,13 +1,13 @@
 # Virtual_Voltage_Reference
 This is the repo of the project of the virtual voltage reference 
 
-## Analysis of discharge networks 
+## Analyses of discharge networks 
 This analysis shows voltage and temperature variation 
 To run these analyses, please go to the analysis directory:
 	
  	cd ./python/anls_dsch_nwks
 
-There are 2 types of analyses (voltage, temperature), 3 library_simulator options (), and 8 discharge networks (a, b, c, d, e, f, g, h). Before running the analysis program, let's choose a few options in the file './program/analysis_dsn.py' as below:
+There are 2 types of analyses (voltage, temperature), 3 library_simulator options (tsmc65_hspice, sky130a_ngspice, sky130a_spectre), and 8 discharge networks (a, b, c, d, e, f, g, h). Before running the analysis program, let's choose a few options in the file './program/analysis_dsn.py' as below:
 
 1. Choose 1 of 2 analysis types:
 * sim_type = 'volt'
