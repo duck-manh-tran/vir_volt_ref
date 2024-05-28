@@ -1,0 +1,71 @@
+*  Generated for: HSPICE
+*  Design library name: vir_volt_ref
+*  Design cell name: dsn_h_12t_tb
+*  Design view name: schematic
+.option search='/home/dkits/tsmc_65/65MSRFGP_PDK/pdk_rf_1p9m_6X1Z1U/models/hspice'
+
+.param Cap=500f l=60n w=200n WoL=0
+.option PARHIER = LOCAL
+.option PORT_VOLTAGE_SCALE_TO_2X = 1
+
+.option WDF=1
+.temp 25
+.lib 'crn65gplus_2d5_lk_v1d0.l' TT
+*Custom Compiler Version O-2018.09-SP1-3
+*Fri May 17 10:16:30 2024
+
+.global gnd!
+********************************************************************************
+* Library          : vir_volt_ref
+* Cell             : dsn_h_12t
+* View             : schematic
+* View Search List : hspice hspiceD schematic spice veriloga
+* View Stop List   : hspice hspiceD
+********************************************************************************
+.subckt dsn_h_12t bot top
+m2 net55 net55 top top pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m5 net56 net56 net55 net55 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m8 net57 net57 net56 net56 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m11 net58 net58 net57 net57 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m1 net47 net47 net58 net58 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m0 net52 net52 net51 net51 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m6 net13 net13 net38 net38 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m3 net38 net38 net52 net52 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m4 net42 net42 net47 net47 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m9 bot bot net13 net13 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m7 net39 net39 net42 net42 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+m10 net51 net51 net39 net39 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
++ pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
+.ends dsn_h_12t
+
+********************************************************************************
+* Library          : vir_volt_ref
+* Cell             : dsn_h_12t_tb
+* View             : schematic
+* View Search List : hspice hspiceD schematic spice veriloga
+* View Stop List   : hspice hspiceD
+********************************************************************************
+xi0 gnd! vdis dsn_h_12t
+c1 vdis gnd! c='Cap'
+
+
+.option opfile=1 split_dp=1
+.option probe=1
+
+.include ctrl_sims.spice
+*.include ctrl_volt.spice
+
+
+
+.end
