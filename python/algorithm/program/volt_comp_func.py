@@ -9,7 +9,7 @@ import sys
 def main():
 	get_volt_func()
 
-#	plt.show()
+	plt.show()
 
 
 def get_data(sim_type, lib, dsnwk):
@@ -33,7 +33,7 @@ def get_data(sim_type, lib, dsnwk):
 
 def get_volt_func():
 	vdds, r_caps, n_vals = get_data('volt', 'tsmc65_hspice', 'dsn_h_12t')
-	order = 6
+	order = 5
 	r_reals = 1/vdds	
 
 	d_12 = n_vals[0] - n_vals[1]
@@ -44,7 +44,8 @@ def get_volt_func():
 	div_2 = d_13/d_23
 	div_3 = d_13/d_12
 
-	ey_vals = np.exp(div_1 + div_2 - div_3)
+#	ey_vals = np.exp(div_1 + div_2 - div_3)
+	ey_vals = np.exp(div_2 - div_3 + 2)
 #	ey_vals = 4*(div_1 + div_2 - div_3)
 
 	print (len(ey_vals))
@@ -119,8 +120,8 @@ def plot_fitting_mesh (order, C, X, Y, Z):
 	ax2.set_ylabel('$y_{val}$')
 	ax2.set_zlabel('$r=1/VDD$')
 
-	figManager = plt.get_current_fig_manager()
-	figManager.window.showMaximized()
+#	figManager = plt.get_current_fig_manager()
+#	figManager.window.showMaximized()
 	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
 
 main()
