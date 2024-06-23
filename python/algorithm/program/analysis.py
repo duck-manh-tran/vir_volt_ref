@@ -26,10 +26,11 @@ def main():
 ## Choose the discharge network for the analysis
 	dsnwk = 'dsn_h_12t'
 
-	analysis(sim_type, lib, dsnwk)
+#	analysis(sim_type, lib, dsnwk)
 #	volt_anls_1(lib, dsnwk)
 #	CTAT_var_anls1(lib, dsnwk)
-#	CTAT_var_anls2(lib, dsnwk)
+#	temp_anls_1(lib, dsnwk)
+	CTAT_var_anls2(lib, dsnwk)
 	plt.show()
 
 
@@ -112,6 +113,7 @@ def process_dataframe(sim_type, lib, dsnwk):
 		df_cols = ['vdd', 'r_cap', 'n1', 'n2', 'n3']
 
 	df =  pd.DataFrame(data, columns = df_cols)
+	df['1_vdd'] = 1/df['vdd']
 	df['n1'] = df['n1'] * 1e6
 	df['n2'] = df['n2'] * 1e6
 	df['n3'] = df['n3'] * 1e6
@@ -119,27 +121,31 @@ def process_dataframe(sim_type, lib, dsnwk):
 	df['d_12'] = df['n1'] - df['n2']
 	df['d_23'] = df['n2'] - df['n3']
 	df['d_13'] = df['n1'] - df['n3']
+	df['d_123'] = df['n1'] + df['n3'] - 2*df['n2']
 
 	df['div_1'] = df.d_12/df.d_23
 	df['div_2'] = df.d_13/df.d_23
 	df['div_3'] = df.d_13/df.d_12
+	df['div_4'] = (df.d_13-500)/df.d_12
 
 	df['y_1'] = df.div_1 + df.div_2 - 2
 	df['y_2'] = df.div_1 + df.div_2 + df.div_3 - 3
 	df['y_3'] = df.div_1 + df.div_2 - df.div_3
-	df['y_4'] = df.div_2 - df.div_3 + 2
+	df['y_4'] = df.div_2 - df.div_3
 	
 	df['ey_1'] = np.exp(df.y_1)
 	df['ey_2'] = np.exp(df.y_2)
 	df['ey_3'] = np.exp(df.y_3)
 	df['ey_4'] = np.exp(df.y_4)
 
-	df['ediv_1'] = np.exp(df.div_1)
-	df['ediv_2'] = np.exp(df.div_2)
-	df['ediv_3'] = np.exp(df.div_3)
+#	df['ediv_1'] = np.exp(df.div_1)
+#	df['ediv_2'] = np.exp(df.div_2)
+#	df['ediv_3'] = np.exp(df.div_3)
+	
+	df['CTAT_1'] = np.cbrt(1.5 - (df.d_13-500)/df.d_12)
 
 	r_cap = df['r_cap'].to_numpy()
-	ey_val =	df['ey_4'].to_numpy()
+	ey_val =	df['ey_3'].to_numpy()
 
 	C = np.loadtxt('C_coeff.txt', dtype=float)
 	order = 1
@@ -162,6 +168,59 @@ def process_dataframe(sim_type, lib, dsnwk):
 		r_cal.append(np.dot(A, C))
 	df['r_cal'] = r_cal
 	return df
+
+def show_graph (grph_name, data_df, data_y, data_z):
+
+	fig = plt.figure(grph_name)
+	list_obj = []
+	n_rows = 2
+	n_cols = 3
+
+	for obj in range(n_rows * n_cols):	
+		list_obj.append(fig.add_subplot(n_rows, n_cols, obj+1, projection='3d'))
+	
+	def setup_axes(obj, data_x, data_y, data_z, dat_x_label, axis_x_label):
+		colors = ['blue', 'orange', 'green', 'red', 'purple']	
+		list_obj[obj].set_xlabel(axis_x_label, fontsize = 16)
+		num_of_var = len(data_x)
+		for ix in range(num_of_var):
+			list_obj[obj].scatter(data_df[data_x[ix]], data_df[data_y], data_df[data_z], c=colors[ix], label=dat_x_label[ix])
+
+	names = ['$n_1$', '$n_2$', '$n_3$']
+	cols = ['n1', 'n2', 'n3']
+	setup_axes (obj=0, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='n')
+
+	names = ['$d_{12}=n_1-n_2$', '$d_{23}=n_2-n_3$', '$d_{13}=n_1-n_3$', '$d_{123}$']
+#	cols = ['d_12', 'd_23', 'd_13', 'd_123']
+	cols = ['d_12', 'd_23', 'd_13']
+	setup_axes (obj=1, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='diff')
+
+	names = ['$dv_1=d_{12}/d_{23}$', '$dv_2=d_{13}/d_{23}$', '$dv_3=d_{13}/d_{12}$', '$dv_4$']
+#	cols = ['div_1', 'div_2', 'div_3', 'div_4']
+	cols = ['div_1', 'div_2', 'div_3']
+	setup_axes (obj=2, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='div')
+
+	names = ['$y_1=dv_1+dv_2-2$', '$y_2=dv_1+dv_2+dv_3-4$', '$y_3=dv_1+dv_2-dv3$', '$y_4$']
+#	cols = ['y_1', 'y_2', 'y_3', 'y_4']
+	cols = ['y_1', 'y_2', 'y_3']
+	setup_axes (obj=3, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='$y_{value}$')
+
+	names = ['$e^{y_1}$', '$e^{y_2}$', '$e^{y_3}$', '$e^{y_4}$']
+#	cols = ['ey_1', 'ey_2', 'ey_3', 'ey_4']
+	cols = ['ey_1', 'ey_2', 'ey_3']
+	setup_axes (obj=4, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='$e^y_{value}$')
+
+#	names = ['$e^{div_1}$', '$e^{div_2}$', '$e^{div_3}$']
+#	cols = ['ediv_1', 'ediv_2', 'ediv_3']
+#	setup_axes (obj=5, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='$e^{div}$')
+
+#	names = ['$CTAT_1$', '$e^{div_2}$', '$e^{div_3}$']
+	names = ['the $ey$ value']
+	cols = ['ey_3']
+	setup_axes (obj=5, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='$ey$')
+#	setup_axes (obj=5, data_x=cols, data_y=data_y, data_z=data_z, dat_x_label=names, axis_x_label='$e^{div}$')	
+	return fig, list_obj
+
 
 def temp_anls_1(lib, dsnwk):
 	processed_df = process_dataframe('temp', lib, dsnwk)
@@ -194,14 +253,37 @@ def temp_anls_1(lib, dsnwk):
 	list_obj.append(fig.add_subplot(n_rows, n_cols, 6))
 	for idd in range(len(vdds)):	
 		filt_df = processed_df[processed_df['vdd'] == vdds[idd]]
-		list_obj[5].scatter(filt_df['temp'], filt_df['r_cal'], c = colors[idd], label=str(vdds[idd]))
+		list_obj[5].scatter(filt_df['temp'], filt_df['r_cal'], c = colors[idd], label='VDD='+str(vdds[idd]))
 		list_obj[5].plot([0, 100], [1/vdds[idd], 1/vdds[idd]], c = colors[idd])
-		list_obj[5].legend()	
-		list_obj[5].grid()	
+		func = np.polyfit(filt_df['temp'], filt_df['r_cal'], 1)
+		X, Y, Y_inv = r_temp_fit(func, vdds[idd])
+		list_obj[5].plot(X, Y)
+
+	list_obj[5].set_xlabel('Temperature', fontsize=16)
+	list_obj[5].set_ylabel('r=f($r_{cap}$, ey)', fontsize=16)
+	
+	list_obj[5].legend()	
+	list_obj[5].grid()	
 	
 #	figManager = plt.get_current_fig_manager()
 #	figManager.window.showMaximized()	
 	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
+
+def volt_anls_1 (lib, dsnwk):
+	data_df = process_dataframe('volt', lib, dsnwk)
+
+	fig, list_obj = show_graph('volt_analysis', data_df, 'r_cap', '1_vdd')
+	for ix in range(6):
+		list_obj[ix].set_ylabel('$r_{cap}$', fontsize = 16)
+		list_obj[ix].set_zlabel('$r=1/VDD$', fontsize = 16)
+		list_obj[ix].legend()
+		list_obj[ix].grid(True)	
+
+#	figManager = plt.get_current_fig_manager()
+#	figManager.window.showMaximized()	
+	
+	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
+
 
 def CTAT_var_anls1(lib, dsnwk):
 	processed_df = process_dataframe('temp', lib, dsnwk)
@@ -214,56 +296,11 @@ def CTAT_var_anls1(lib, dsnwk):
 		return df
 	filt_df = r_temp_compen(filt_df)
 
-	fig = plt.figure('temp_var_anls1')
-	n_rows = 2
-	n_cols = 3
-	colors = ['blue', 'orange', 'green', 'red', 'purple']	
-	list_obj = []
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 1, projection='3d'))
-	names = ['$n_1$', '$n_2$', '$n_3$']
-	cols = ['n1', 'n2', 'n3']
-	list_obj[0].set_xlabel('$n$', fontsize = 16)
-	for ix in range(3):
-		list_obj[0].scatter(filt_df[cols[ix]], filt_df['r_cap'], filt_df['comp'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 2, projection='3d'))
-	names = ['$d_{12}=n_1-n_2$', '$d_{23}=n_2-n_3$', '$d_{13}=n_1-n_3$']
-	cols = ['d_12', 'd_23', 'd_13']
-	list_obj[1].set_xlabel('$diff$', fontsize = 16)
-	for ix in range(3):
-		list_obj[1].scatter(filt_df[cols[ix]], filt_df['r_cap'], filt_df['comp'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 3, projection='3d'))
-	names = ['$div_1$', '$div_2$', '$div_3$']
-	cols = ['div_1', 'div_2', 'div_3']
-	list_obj[2].set_xlabel('$div$', fontsize = 16)
-	for ix in range(3):
-		list_obj[2].scatter(filt_df[cols[ix]], filt_df['r_cap'], filt_df['comp'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 4, projection='3d'))
-	names = ['$y_1$', '$y_2$', '$y_3$', '$y_4$']
-	cols = ['y_1', 'y_2', 'y_3', 'y_4']
-	list_obj[3].set_xlabel('$y$', fontsize = 16)
-	for ix in range(4):
-		list_obj[3].scatter(filt_df[cols[ix]], filt_df['r_cap'], filt_df['comp'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 5, projection='3d'))
-	names = ['$e^{y_1}$', '$e^{y_2}$', '$e^{y_3}$']
-	cols = ['ey_1', 'ey_2', 'ey_3']
-	list_obj[4].set_xlabel('$e^y$', fontsize = 16)
-	for ix in range(3):
-		list_obj[4].scatter(filt_df[cols[ix]], filt_df['r_cap'], filt_df['comp'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 6, projection='3d'))
-	names = ['$e^{div_1}$', '$e^{div_2}$', '$e^{div_3}$']
-	cols = ['ediv_1', 'ediv_2', 'ediv_3']
-	list_obj[4].set_xlabel('$e^{div}$', fontsize = 16)
-	for ix in range(3):
-		list_obj[5].scatter(filt_df[cols[ix]], filt_df['r_cap'], filt_df['comp'], c=colors[ix], label=names[ix])
-
+	fig, list_obj = show_graph('CTAT_var_analysis_1', filt_df, 'r_cap', 'temp')
 
 	for ix in range(6):
+		list_obj[ix].set_ylabel('$r_{cap}$', fontsize = 16)
+		list_obj[ix].set_zlabel('$temp$', fontsize = 16)
 		list_obj[ix].legend()	
 		list_obj[ix].grid(True)	
 	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
@@ -272,122 +309,55 @@ def CTAT_var_anls1(lib, dsnwk):
 def CTAT_var_anls2(lib, dsnwk):
 	processed_df = process_dataframe('temp', lib, dsnwk)
 
-	filt_df = processed_df[processed_df['vdd'] == 0.4]
+	def cal_fit_line(func):
+		temp_range = np.arange (0, 101, 1)
+		fit_val = func[0]*temp_range + func[1]
+		return temp_range, fit_val
 
-	r_caps = [1.3, 1.6, 1.9, 2.1, 2.4]
 	list_obj = []
 	fig = plt.figure('temp_var_anls2')
-	n_rows = 2
-	n_cols = 3
 	colors = ['blue', 'orange', 'green', 'red', 'purple']	
+	n_rows=1
+	n_cols=2
 
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 1, projection='3d'))
-	names = ['$n_1$', '$n_2$', '$n_3$']
-	cols = ['n1', 'n2', 'n3']
-	list_obj[0].set_xlabel('$n$', fontsize = 16)
-	for ix in range(3):
-		list_obj[0].scatter(filt_df['temp'], filt_df['r_cap'], filt_df[cols[ix]], \
-				c=colors[ix], label=names[ix])
+	list_obj.append(fig.add_subplot(n_rows, n_cols, 1))
+	list_obj.append(fig.add_subplot(n_rows, n_cols, 2))
+#	ctat_1 = np.sqrt(-filt_df['CTAT_1'] + 2) 
+#	ctat_2 = np.cbrt(-filt_df['CTAT_1'] + 1.5) 
+	
+	
+	vdds = np.arange(4, 8.1, 1)/10
+	for idd in range(len(vdds)):
+		filt_df = processed_df[processed_df['vdd'] == vdds[idd]]
+		ctat = 0.37 - 4*filt_df['CTAT_1']/(filt_df['r_cap']+9.5)
+		func1 = np.polyfit(filt_df['temp'], ctat, 1)
+		temp_range, line1 = cal_fit_line(func1)
+		list_obj[0].scatter(filt_df['temp'], ctat, c=colors[idd], label=('VDD='+str(vdds[idd])))
+		list_obj[0].plot(temp_range, line1, c=colors[idd], label=('slope='+str(int(func1[0] * 1e4))+'E-4'))
+		ctat = 0.37 - 4*filt_df['CTAT_1']/(filt_df['r_cap']+9.5)
+		list_obj[1].scatter(filt_df['temp'], filt_df['r_cal'] + ctat, c=colors[idd], label=('VDD='+str(vdds[idd])))
+		func2 = np.polyfit(filt_df['temp'], filt_df['r_cal'] + ctat, 1)
+		temp_range, line2 = cal_fit_line(func2)
+		list_obj[1].plot(temp_range, line2, c=colors[idd], label=('slope='+str(int(func2[0] * 1e6))+'E-4'))
+		list_obj[1].plot([0, 100], [1/vdds[idd], 1/vdds[idd]], c=colors[idd])
 
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 2, projection='3d'))
-	names = ['$d_{12}=n_1-n_2$', '$d_{23}=n_2-n_3$', '$d_{13}=n_1-n_3$']
-	cols = ['d_12', 'd_23', 'd_13']
-	list_obj[1].set_xlabel('$diff$', fontsize = 16)
-	for ix in range(3):
-		list_obj[1].scatter(filt_df['temp'], filt_df['r_cap'], filt_df[cols[ix]], \
-				c=colors[ix], label=names[ix])
+	volt_df = process_dataframe('volt', lib, dsnwk)
+	
+	v_variation = 0.37 - 8*volt_df['CTAT_1']/(volt_df['r_cap']+21)
 
-	filt_rcap_mk  = filt_df['r_cap'].isin(r_caps)
-	filt_rcap  = filt_df[filt_rcap_mk]
+#	list_obj[1].scatter(volt_df['vdd'], v_variation, c=colors[1], label='$CTAT_4$')
 
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 3))
-	names = ['$dv_1=d_{12}/d_{23}$', '$dv_2=d_{13}/d_{23}$', '$dv_3=d_{13}/d_{12}$']
-	cols = ['div_1', 'div_2', 'div_3']
-	list_obj[2].set_xlabel('$div$', fontsize = 16)
-	for ix in range(3):
-		list_obj[2].scatter(filt_rcap['temp'], filt_rcap[cols[ix]], c=colors[ix], label=names[ix])
+	#filt_df = processed_df[processed_df['vdd'] == 0.5]
 
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 4))
-	names = ['$y_1=dv_1+dv_2-2$', '$y_2=dv_1+dv_2+dv_3-4$', '$y_3=dv_1+dv_2-dv3$']
-	cols = ['y_1', 'y_2', 'y_3']
-	list_obj[3].set_xlabel('$y$', fontsize = 16)
-	for ix in range(3):
-		list_obj[3].scatter(filt_rcap['temp'], filt_rcap[cols[ix]], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 5))
-	list_obj[4].scatter(filt_rcap['temp'], filt_rcap['div_3'], c=colors[0], label='$dv_3=d_{13}/d_{12}$')
-
-	for ix in range(5):
+	list_obj[0].set_xlabel('Temperature', fontsize=16)
+	list_obj[0].set_ylabel('$y_{ctat}$', fontsize=16)
+	list_obj[1].set_xlabel('Temperature', fontsize=16)
+	list_obj[1].set_ylabel('$r=f(r_{cap}, ey)+y_{ctat}$', fontsize=16)
+	list_obj[0].tick_params(axis='both', which='major', labelsize=14)
+	
+	for ix in range(2):
 		list_obj[ix].legend()	
 		list_obj[ix].grid(True)	
-	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
-
-
-#def show_graph (data_df, X_data, Y_data):
-
-
-def volt_anls_1 (lib, dsnwk):
-	var_df = process_dataframe('volt', lib, dsnwk)
-
-	fig = plt.figure('volt2')
-	list_obj = []
-	n_rows = 2
-	n_cols = 3
-#	colors = ['navy', 'blue', 'dodgerblue']
-	colors = ['blue', 'orange', 'green', 'red', 'purple']	
-	
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 1, projection='3d'))
-	names = ['$n_1$', '$n_2$', '$n_3$']
-	cols = ['n1', 'n2', 'n3']
-	list_obj[0].set_xlabel('$n$', fontsize = 16)
-	for ix in range(3):
-		list_obj[0].scatter(var_df[cols[ix]], var_df['r_cap'], 1/var_df['vdd'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 2, projection='3d'))
-	names = ['$d_{12}=n_1-n_2$', '$d_{23}=n_2-n_3$', '$d_{13}=n_1-n_3$']
-	cols = ['d_12', 'd_23', 'd_13']
-	list_obj[1].set_xlabel('$diff$', fontsize = 16)
-	for ix in range(3):
-		list_obj[1].scatter(var_df[cols[ix]], var_df['r_cap'], 1/var_df['vdd'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 3, projection='3d'))
-	names = ['$dv_1=d_{12}/d_{23}$', '$dv_2=d_{13}/d_{23}$', '$dv_3=d_{13}/d_{12}$']
-	cols = ['div_1', 'div_2', 'div_3']
-	list_obj[2].set_xlabel('$div$', fontsize = 16)
-	for ix in range(3):
-		list_obj[2].scatter(var_df[cols[ix]], var_df['r_cap'], 1/var_df['vdd'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 4, projection='3d'))
-	names = ['$y_1=dv_1+dv_2-2$', '$y_2=dv_1+dv_2+dv_3-4$', '$y_3=dv_1+dv_2-dv3$', '$y_4$']
-	cols = ['y_1', 'y_2', 'y_3', 'y_4']
-	list_obj[3].set_xlabel('$y$', fontsize = 16)
-	for ix in range(4):
-		list_obj[3].scatter(var_df[cols[ix]], var_df['r_cap'], 1/var_df['vdd'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 5, projection='3d'))
-	names = ['$e^{y_1}$', '$e^{y_2}$', '$e^{y_3}$', '$e^{y_4}$']
-	cols = ['ey_1', 'ey_2', 'ey_3', 'ey_4']
-	list_obj[4].set_xlabel('$e^y$', fontsize = 16)
-	for ix in range(4):
-		list_obj[4].scatter(var_df[cols[ix]], var_df['r_cap'], 1/var_df['vdd'], c=colors[ix], label=names[ix])
-
-	list_obj.append(fig.add_subplot(n_rows, n_cols, 6, projection='3d'))
-	names = ['$e^{div_1}$', '$e^{div_2}$', '$e^{div_3}$']
-	cols = ['ediv_1', 'ediv_2', 'ediv_3']
-	list_obj[4].set_xlabel('$e^{div}$', fontsize = 16)
-	for ix in range(3):
-		list_obj[5].scatter(var_df[cols[ix]], var_df['r_cap'], 1/var_df['vdd'], c=colors[ix], label=names[ix])
-
-	print(type(list_obj[0]))
-	for ix in range(5):
-		list_obj[ix].set_ylabel('$r_{cap}$', fontsize = 16)
-		list_obj[ix].set_zlabel('$r=1/VDD$', fontsize = 16)
-		list_obj[ix].legend()
-		list_obj[ix].grid(True)	
-
-#	figManager = plt.get_current_fig_manager()
-#	figManager.window.showMaximized()	
-	
 	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
 
 main()

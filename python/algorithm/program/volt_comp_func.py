@@ -44,8 +44,8 @@ def get_volt_func():
 	div_2 = d_13/d_23
 	div_3 = d_13/d_12
 
-#	ey_vals = np.exp(div_1 + div_2 - div_3)
-	ey_vals = np.exp(div_2 - div_3 + 2)
+	ey_vals = np.exp(div_1 + div_2 - div_3)
+#	ey_vals = np.exp(div_2 - div_3)
 #	ey_vals = 4*(div_1 + div_2 - div_3)
 
 	print (len(ey_vals))
@@ -70,7 +70,7 @@ def curve_fitting(order, X, Y, Z):
 	
 	eX = np.array([xi for xi,_ in e]).T
 	eY = np.array([yi for _,yi in e]).T
-
+	print ("ey:", eY)
 	# best-fit polynomial surface
 	A = (X ** eX) * (Y ** eY)
 	C,resid,_,_ = lstsq(A, Z)    # coefficients
@@ -106,20 +106,21 @@ def plot_fitting_mesh (order, C, X, Y, Z):
 	LR_e = np.concatenate( LR_e, axis=0 )
 
 
-	fig = plt.figure('error rate')	
-	ax1 = fig.add_subplot(1, 2, 1)
+	fig = plt.figure('Forming voltage compensated function')	
+	ax1 = fig.add_subplot(1, 2, 2)
 	ax1.plot(LR_e)
-	ax1.set_xlabel('points')
-	ax1.set_ylabel('mesh error(%)')
+	ax1.set_xlabel('points', fontsize=16)
+	ax1.set_ylabel('fitting error(%)', fontsize=16)
 	ax1.grid(True)
 	
-	ax2 = fig.add_subplot(1, 2, 2, projection ="3d")	
+	ax2 = fig.add_subplot(1, 2, 1, projection ="3d")	
 	ax2.scatter(X, Y, Z, c='r', s=2)
 	ax2.plot_surface(XX, YY, ZZ, rstride=1, cstride=1, alpha=0.2, linewidth=0.5, edgecolor='b')
-	ax2.set_xlabel('$r_{cap}$')
-	ax2.set_ylabel('$y_{val}$')
-	ax2.set_zlabel('$r=1/VDD$')
+	ax2.set_xlabel('$r_{cap}$', fontsize=16)
+	ax2.set_ylabel('$ey$', fontsize=16)
+	ax2.set_zlabel('$r=1/VDD$', fontsize=16)
 
+#	plt.xticks(fontsize=16, rotation=90)
 #	figManager = plt.get_current_fig_manager()
 #	figManager.window.showMaximized()
 	fig.tight_layout(pad=0, w_pad=0, h_pad=0)
