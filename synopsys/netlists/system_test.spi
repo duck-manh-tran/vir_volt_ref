@@ -61,7 +61,7 @@ v3 vdd gnd! dc=0.6 power=0
 xi0 gnd! vc dsn_h_12t l='l' w='w'
 m15 vdd ctrl_dsn_bar gnd! gnd! nch l=0.1u w=2u m=1 nf=4 sd=0.2u ad=2e-13 as=2.75e-13
 + pd=2.8e-06 ps=4.1e-06 nrd=0.05 nrs=0.05 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
-xi23 vdd gnd! vc vc ctrl_dsn test
+xi23 vdd gnd! vc vc ctrl_dsn system
 xi19 ctrl_dsn ctrl_dsn_bar vdd gnd! invd1
 
 .hdl '/home/userdata/k61D/manhtd_61d/git/vir_volt_ref/synopsys/vir_volt_ref/system/veriloga/veriloga.va'
@@ -80,7 +80,7 @@ MU1-M_u3 ZN I VDD VDD pch w=0.52u l=0.06u
 
 
 
-.tran 1n 10m start=0
+.tran 1n 20m start=0
 .option opfile=1 split_dp=1
 .option probe=1
 .probe tran v(*) level=1

@@ -3,7 +3,7 @@
 `include "constants.vams"
 `include "disciplines.vams"
 
-module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
+module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	output w_dac_out, w_ctrl_dsn;
 	electrical w_dac_out, ctrl_dsn;
 	
@@ -20,7 +20,29 @@ module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	parameter real r_cap = 1.5;
 	parameter real k_thres = 0.25;
 	real k[0:2] = '{0.4, 0.3, 0.25};
+	real C [0:20] = '{ 1.357103736608258657e+02, 
+							-1.086924334560508356e+02, 
+							-4.825888526415835855e+01, 
+							 1.866854477384937994e+01, 
+							 4.137460839575274463e+01, 
+							 5.025432110834514354e+00, 
+							 4.816538203498989257e-02, 
+							-6.643257709042705628e+00, 
+							-5.489466598610142078e+00, 
+							 1.931940769608994288e-02, 
+							-2.362920113029641223e-01, 
+							 2.201414620121373844e-01, 
+							 7.021060688891161972e-01, 
+							 2.976774339262935887e-01, 
+							-2.978049778027955924e-02, 
+							 1.746181970843498077e-02, 
+							 7.071843765934030142e-03, 
+							-1.671682958543474484e-02, 
+							-2.339599877557141383e-02, 
+							-5.156746624148667024e-03, 
+							 1.226032035432922385e-03};
 
+	parameter real v_ref = 0.3;
 	parameter real rel_err = 0.01;
 	parameter integer DAC_Nbit = 12;
 	parameter integer TDC_Nbit = 12;
@@ -35,19 +57,21 @@ module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	real v_dac_inner;	
 	real v_vdd;
 	real v_ctrl_dsn;
+	real X, Y;
+	integer k_ref;
 	
 	// time decleration
 	real time_starting = 100u;
 	real time_recovering = 100u;
 	real time_after_cross_threshold = 100u;
-	real time_pre_cross_threshold;
+	real time_past_cross_threshold;
 	real time_cross_threshold;
 	real time_processing;
+	real time_hold_ref_volt;
 	integer step, loop;
 	integer ix;
 	integer f;
 	analog begin
-
 		@(initial_step) begin
 			f = $fopen(data_file, "w");
 				$fwrite(f, "--measurement data file--\n");
@@ -66,11 +90,12 @@ module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 				$fclose(f);
 			end
 			time_cross_threshold = 0;
+			time_processing = 0;
+			time_hold_ref_volt = 100m;
 			v_ctrl_dsn = 0;
 			v_dac_inner = v_vdd * (m[0]/DAC_Nlevel);
 			step = 0;
 			loop = 0;
-			time_processing = 0;
 		end
 	
 		@(timer(time_starting))
@@ -80,18 +105,37 @@ module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 			v_ctrl_dsn = 0;
 
 		@(cross(V(w_tdc_in, w_gnd) - v_vdd * k_thres, -1)) begin
-			time_pre_cross_threshold = time_cross_threshold;
+			time_past_cross_threshold = time_cross_threshold;
 			time_cross_threshold = $abstime;
-			if (time_pre_cross_threshold == 0)
-				n[0] = $floor((time_cross_threshold - time_recovering - time_starting) * 1e6);
+			
+			if (time_past_cross_threshold == 0)
+				n[0] = $floor((time_cross_threshold - time_starting - time_recovering) * 1e6);
 			else
-				n[step] = $floor((time_cross_threshold - time_pre_cross_threshold - time_recovering - time_processing) *1e6);
-	
+				n[step] = $floor((time_cross_threshold - time_past_cross_threshold - time_after_cross_threshold 
+										- time_recovering - time_processing) * 1e6);
+		
 			if (step == 2) begin 
 				time_processing = 100u;
+				X = r;
+				Y = exp((n[0]-n[1])/(n[1]-n[2]) + (n[0]-n[2])/(n[1]-n[2]) - (n[0]-n[2])/(n[0]-n[1])); 
+				y_ptat = C[0] + C[1]*X + C[2]*Y + C[3]*X**2 + C[4]*X*Y + C[5]*Y**2 + C[6]*X**3 
+						+ C[7]*X**2*Y + C[8]*X*Y**2 + C[9]*Y**3 + C[10]*X**4 + C[11]*X**3*Y 
+						+ C[12]*X**2*Y**2 + C[13]*X*Y**3 + C[14]*Y**4 + C[15]*X**5 + C[16]*X**4*Y 
+						+ C[17]*X**3*Y**2 + C[18]*X**2*Y**3 + C[19]*X*Y**4 + C[20]*Y**5; 
+				r_old = r;
+				if (y_ptat > 2.5)
+					r = 2.5;
+				else if (y_ptat < 1.25)
+					r = 1.25;
+				else
+					r = y_ptat;
+				
 				f = $fopen (data_file, "a");
-					$fdisplay (f, "%.3f, %.3f, %d, %d, %d", v_vdd, r, n[0], n[1], n[2]);
+					$fdisplay (f, "%.3f, %.3f, %.3f, %d, %d, %d", v_vdd, r, r_old, n[0], n[1], n[2]);
 				$fclose(f);
+				for (ix = 0; ix < 3; ix =ix +1)
+					m[ix] = $floor(k[ix] * r * DAC_Nlevel);
+				loop = loop + 1;
 			end
 			else
 				time_processing = 0;
@@ -105,7 +149,7 @@ module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 
 		@(timer(time_cross_threshold + time_after_cross_threshold + time_recovering + time_processing))
 			v_ctrl_dsn = 0;
-
+			
 		V(w_ctrl_dsn, w_gnd) <+ transition (v_ctrl_dsn * v_vdd, 1u, 1u, 1u);
 		V(w_dac_inner, w_gnd) <+ transition (v_dac_inner);	
 		V(w_dac_highZ, w_gnd) <+ (1e+15) * I(w_dac_out, w_gnd);
