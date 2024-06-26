@@ -1,0 +1,118 @@
+// Created Tue Jun 25 01:52:59 2024
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module test (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
+	output w_dac_out, w_ctrl_dsn;
+	electrical w_dac_out, ctrl_dsn;
+	
+	input w_tdc_in;
+	electrical w_tdc_in;
+
+	inout w_vdd, w_gnd;
+	electrical w_vdd, w_gnd;
+	
+	// Inner wire decleration
+	electrical w_dac_inner, w_dac_highZ;
+
+	// Parameter decleration
+	parameter real r_cap = 1.5;
+	parameter real k_thres = 0.25;
+	real k[0:2] = '{0.4, 0.3, 0.25};
+
+	parameter real rel_err = 0.01;
+	parameter integer DAC_Nbit = 12;
+	parameter integer TDC_Nbit = 12;
+	parameter integer DAC_Nlevel = 2 ** DAC_Nbit;
+	parameter string data_file = "data.txt";
+	parameter string log_file = "./simulation/veriloga.log";
+
+	// Variable decleration 
+	real m[0:2];
+	real n[0:2];
+	real r;
+	real v_dac_inner;	
+	real v_vdd;
+	real v_ctrl_dsn;
+	
+	// time decleration
+	real time_starting = 100u;
+	real time_recovering = 100u;
+	real time_after_cross_threshold = 100u;
+	real time_pre_cross_threshold;
+	real time_cross_threshold;
+	real time_processing;
+	integer step, loop;
+	integer ix;
+	integer f;
+	analog begin
+
+		@(initial_step) begin
+			f = $fopen(data_file, "w");
+				$fwrite(f, "--measurement data file--\n");
+			$fclose(f);
+		
+			f = $fopen(log_file, "w");
+				$fwrite(f, "--log display file--\n");
+			$fclose(f);
+
+			v_vdd = V(w_vdd, w_gnd);
+			r = r_cap;
+			for (ix = 0; ix < 3; ix =ix +1) begin
+				m[ix] = $floor(k[ix] * r * DAC_Nlevel);
+				f = $fopen(log_file, "a");
+					$fdisplay(f, "display: m%d = %d", ix+1, m[ix]);
+				$fclose(f);
+			end
+			time_cross_threshold = 0;
+			v_ctrl_dsn = 0;
+			v_dac_inner = v_vdd * (m[0]/DAC_Nlevel);
+			step = 0;
+			loop = 0;
+			time_processing = 0;
+		end
+	
+		@(timer(time_starting))
+			v_ctrl_dsn = 1;
+
+		@(timer(time_starting + time_recovering))
+			v_ctrl_dsn = 0;
+
+		@(cross(V(w_tdc_in, w_gnd) - v_vdd * k_thres, -1)) begin
+			time_pre_cross_threshold = time_cross_threshold;
+			time_cross_threshold = $abstime;
+			if (time_pre_cross_threshold == 0)
+				n[0] = $floor((time_cross_threshold - time_recovering - time_starting) * 1e6);
+			else
+				n[step] = $floor((time_cross_threshold - time_pre_cross_threshold - time_recovering - time_processing) *1e6);
+	
+			if (step == 2) begin 
+				time_processing = 100u;
+				f = $fopen (data_file, "a");
+					$fdisplay (f, "%.3f, %.3f, %d, %d, %d", v_vdd, r, n[0], n[1], n[2]);
+				$fclose(f);
+			end
+			else
+				time_processing = 0;
+			step = (step + 1) % 3;
+		end
+
+		@(timer(time_cross_threshold + time_after_cross_threshold)) begin
+			v_ctrl_dsn = 1;
+			v_dac_inner = v_vdd * (m[step]/DAC_Nlevel);
+		end	
+
+		@(timer(time_cross_threshold + time_after_cross_threshold + time_recovering + time_processing))
+			v_ctrl_dsn = 0;
+
+		V(w_ctrl_dsn, w_gnd) <+ transition (v_ctrl_dsn * v_vdd, 1u, 1u, 1u);
+		V(w_dac_inner, w_gnd) <+ transition (v_dac_inner);	
+		V(w_dac_highZ, w_gnd) <+ (1e+15) * I(w_dac_out, w_gnd);
+
+		if (V(w_ctrl_dsn, w_gnd) > v_vdd/2)
+			V(w_dac_out, w_gnd) <+ V(w_dac_inner, w_gnd);
+		else
+			V(w_dac_out, w_gnd) <+ V(w_dac_highZ, w_gnd);
+ 	end
+endmodule
