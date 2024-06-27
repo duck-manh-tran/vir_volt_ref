@@ -58,7 +58,7 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	real v_vdd;
 	real v_ctrl_dsn;
 	real X, Y;
-	integer k_ref;
+	real k_ref;
 	
 	// time decleration
 	real time_starting = 100u;
@@ -67,7 +67,7 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	real time_past_cross_threshold;
 	real time_cross_threshold;
 	real time_processing;
-	real time_hold_ref_volt;
+	real time_hold_ref_volt = 1;
 	integer step, loop;
 	integer ix;
 	integer f;
@@ -91,7 +91,6 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 			end
 			time_cross_threshold = 0;
 			time_processing = 0;
-			time_hold_ref_volt = 100m;
 			v_ctrl_dsn = 0;
 			v_dac_inner = v_vdd * (m[0]/DAC_Nlevel);
 			step = 0;
@@ -140,6 +139,20 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 			else
 				time_processing = 0;
 			step = (step + 1) % 3;
+			
+			if (loop == 3) begin
+				k_ref = $floor(DAC_Nlevel * v_ref*r);
+				time_hold_ref_volt = time_cross_threshold + time_after_cross_threshold;
+				time_cross_threshold = 0;
+			//	time_recovering = 0;
+			//	time_starting = 0;
+			//	time_processing = 0;
+			//	time_after_cross_threshold = 0;
+			end
+			f = $fopen (log_file, "a");
+				$fdisplay(f, "time_hold_ref_volt = %f", time_hold_ref_volt * 1e6);
+				$fdisplay(f, "time_cross_threshold = %f", time_cross_threshold * 1e6);
+			$fclose (f);
 		end
 
 		@(timer(time_cross_threshold + time_after_cross_threshold)) begin
@@ -150,6 +163,15 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 		@(timer(time_cross_threshold + time_after_cross_threshold + time_recovering + time_processing))
 			v_ctrl_dsn = 0;
 			
+		@(timer(time_hold_ref_volt)) begin
+			v_ctrl_dsn = 1;
+			v_dac_inner = v_vdd * k_ref/DAC_Nlevel;
+			f = $fopen (log_file, "a");
+				$fdisplay(f, "k reference = %f", k_ref);
+				$fdisplay(f, "v_dac_inner = %f", v_dac_inner);
+			$fclose (f);
+		end
+
 		V(w_ctrl_dsn, w_gnd) <+ transition (v_ctrl_dsn * v_vdd, 1u, 1u, 1u);
 		V(w_dac_inner, w_gnd) <+ transition (v_dac_inner);	
 		V(w_dac_highZ, w_gnd) <+ (1e+15) * I(w_dac_out, w_gnd);
