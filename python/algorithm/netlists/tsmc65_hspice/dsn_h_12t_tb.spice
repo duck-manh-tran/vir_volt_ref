@@ -4,7 +4,7 @@
 *  Design view name: schematic
 .option search='/home/dkits/tsmc_65/65MSRFGP_PDK/pdk_rf_1p9m_6X1Z1U/models/hspice'
 
-.param Cap=500f l=60n w=200n WoL=0
+.param Cap=500f l=60n w=200n
 .option PARHIER = LOCAL
 .option PORT_VOLTAGE_SCALE_TO_2X = 1
 
@@ -22,7 +22,7 @@
 * View Search List : hspice hspiceD schematic spice veriloga
 * View Stop List   : hspice hspiceD
 ********************************************************************************
-.subckt dsn_h_12t bot top
+.subckt dsn_h_12t bot top l=60n w=200n
 m2 net55 net55 top top pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
 + pd=7.5e-07 ps=7.5e-07 nrd=0.5 nrs=0.5 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
 m5 net56 net56 net55 net55 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3.5e-14
@@ -56,7 +56,7 @@ m10 net51 net51 net39 net39 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3
 * View Search List : hspice hspiceD schematic spice veriloga
 * View Stop List   : hspice hspiceD
 ********************************************************************************
-xi0 gnd! vdis dsn_h_12t
+xi0 gnd! vdis dsn_h_12t l='l' w='w'
 c1 vdis gnd! c='Cap'
 
 
@@ -64,7 +64,6 @@ c1 vdis gnd! c='Cap'
 .option probe=1
 
 .include ctrl_sims.spice
-*.include ctrl_volt.spice
 
 
 

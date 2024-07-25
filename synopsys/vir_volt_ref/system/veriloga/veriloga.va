@@ -17,38 +17,43 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	electrical w_dac_inner, w_dac_highZ;
 
 	// Parameter decleration
-	parameter real r_cap = 1.5;
+	parameter real r_cap = 2.5;
 	parameter real k_thres = 0.25;
-	real k[0:2] = '{0.4, 0.3, 0.25};
-	real C [0:20] = '{ 1.357103736608258657e+02, 
-							-1.086924334560508356e+02, 
-							-4.825888526415835855e+01, 
-							 1.866854477384937994e+01, 
-							 4.137460839575274463e+01, 
-							 5.025432110834514354e+00, 
-							 4.816538203498989257e-02, 
-							-6.643257709042705628e+00, 
-							-5.489466598610142078e+00, 
-							 1.931940769608994288e-02, 
-							-2.362920113029641223e-01, 
-							 2.201414620121373844e-01, 
-							 7.021060688891161972e-01, 
-							 2.976774339262935887e-01, 
-							-2.978049778027955924e-02, 
-							 1.746181970843498077e-02, 
-							 7.071843765934030142e-03, 
-							-1.671682958543474484e-02, 
-							-2.339599877557141383e-02, 
-							-5.156746624148667024e-03, 
-							 1.226032035432922385e-03};
-
-	parameter real v_ref = 0.3;
+	parameter real v_ref = 0.35;
 	parameter real rel_err = 0.01;
-	parameter integer DAC_Nbit = 12;
+	parameter integer DAC_Nbit = 16;
 	parameter integer TDC_Nbit = 12;
-	parameter integer DAC_Nlevel = 2 ** DAC_Nbit;
-	parameter string data_file = "data.txt";
-	parameter string log_file = "./simulation/veriloga.log";
+	parameter integer collect_mode = 1;
+	parameter integer clk_freq = 1e8;
+	integer DAC_Nlevel = 2 ** DAC_Nbit;
+	string result = "result.csv";
+	string data_file = "data.csv";
+	string log_file = "veriloga.log";
+
+	real k[0:2] = '{0.4, 0.3, 0.25};
+	real C [0:20] = '{
+							64815.449212712680
+							,-40217.431354969689
+							,-28547.564333606533
+							,9328.263654274406
+							,14405.025957362182
+							,5004.210897595906
+							,-963.407303386771
+							,-2570.402070839788
+							,-1921.971103159386
+							,-436.342169753906
+							,40.999246572674
+							,182.962482776886
+							,234.603418884873
+							,113.127024029542
+							,18.924285294002
+							,-0.926566263117
+							,-3.519103094401
+							,-8.899307024496
+							,-7.026170339461
+							,-2.481821733698
+							,-0.326301914894
+						};
 
 	// Variable decleration 
 	real m[0:2];
@@ -59,6 +64,7 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	real v_ctrl_dsn;
 	real X, Y;
 	real k_ref;
+	real v_dac [0:9];
 	
 	// time decleration
 	real time_starting = 100u;
@@ -73,9 +79,9 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	integer f;
 	analog begin
 		@(initial_step) begin
-			f = $fopen(data_file, "w");
-				$fwrite(f, "--measurement data file--\n");
-			$fclose(f);
+//			f = $fopen(data_file, "a");
+//				$fwrite(f, "--measurement data file--\n");
+//			$fclose(f);
 		
 			f = $fopen(log_file, "w");
 				$fwrite(f, "--log display file--\n");
@@ -108,12 +114,17 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 			time_cross_threshold = $abstime;
 			
 			if (time_past_cross_threshold == 0)
-				n[0] = $floor((time_cross_threshold - time_starting - time_recovering) * 1e6);
+				n[0] = $floor((time_cross_threshold - time_starting - time_recovering) * clk_freq);
 			else
 				n[step] = $floor((time_cross_threshold - time_past_cross_threshold - time_after_cross_threshold 
-										- time_recovering - time_processing) * 1e6);
-		
-			if (step == 2) begin 
+										- time_recovering - time_processing) * clk_freq);
+			
+			if ((step == 2) & (collect_mode == 1)) begin
+				f = $fopen (data_file, "a");
+					$fdisplay (f, "%.3f, %.3f, %d, %d, %d", v_vdd, r_cap, n[0], n[1], n[2]);
+				$fclose(f);
+			end
+			else if ((step == 2) & (collect_mode == 0)) begin 
 				time_processing = 100u;
 				X = r;
 				Y = exp((n[0]-n[1])/(n[1]-n[2]) + (n[0]-n[2])/(n[1]-n[2]) - (n[0]-n[2])/(n[0]-n[1])); 
@@ -122,35 +133,31 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 						+ C[12]*X**2*Y**2 + C[13]*X*Y**3 + C[14]*Y**4 + C[15]*X**5 + C[16]*X**4*Y 
 						+ C[17]*X**3*Y**2 + C[18]*X**2*Y**3 + C[19]*X*Y**4 + C[20]*Y**5; 
 				r_old = r;
-				if (y_ptat > 2.5)
+				if (y_ptat > 25)
 					r = 2.5;
-				else if (y_ptat < 1.25)
+				else if (y_ptat < 12.5)
 					r = 1.25;
 				else
-					r = y_ptat;
+					r = y_ptat/10;
 				
 				f = $fopen (data_file, "a");
 					$fdisplay (f, "%.3f, %.3f, %.3f, %d, %d, %d", v_vdd, r, r_old, n[0], n[1], n[2]);
 				$fclose(f);
 				for (ix = 0; ix < 3; ix =ix +1)
 					m[ix] = $floor(k[ix] * r * DAC_Nlevel);
+				v_dac[loop] = v_vdd * ($floor(DAC_Nlevel * v_ref*r)/DAC_Nlevel);
 				loop = loop + 1;
 			end
 			else
 				time_processing = 0;
 			step = (step + 1) % 3;
 			
-			if (loop == 3) begin
+			if (loop == 4) begin
 				k_ref = $floor(DAC_Nlevel * v_ref*r);
 				time_hold_ref_volt = time_cross_threshold + time_after_cross_threshold;
 				time_cross_threshold = 0;
-			//	time_recovering = 0;
-			//	time_starting = 0;
-			//	time_processing = 0;
-			//	time_after_cross_threshold = 0;
 			end
 			f = $fopen (log_file, "a");
-				$fdisplay(f, "time_hold_ref_volt = %f", time_hold_ref_volt * 1e6);
 				$fdisplay(f, "time_cross_threshold = %f", time_cross_threshold * 1e6);
 			$fclose (f);
 		end
@@ -170,15 +177,18 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 				$fdisplay(f, "k reference = %f", k_ref);
 				$fdisplay(f, "v_dac_inner = %f", v_dac_inner);
 			$fclose (f);
+			f = $fopen (result, "a");
+				$fdisplay(f, "%.2f, %.3f, %.3f, %.3f, %.3f, %.3f", 
+				v_vdd, v_dac[0], v_dac[1], v_dac[2], v_dac[3], v_dac_inner);
+			$fclose (f);
 		end
 
 		V(w_ctrl_dsn, w_gnd) <+ transition (v_ctrl_dsn * v_vdd, 1u, 1u, 1u);
 		V(w_dac_inner, w_gnd) <+ transition (v_dac_inner);	
-		V(w_dac_highZ, w_gnd) <+ (1e+15) * I(w_dac_out, w_gnd);
 
 		if (V(w_ctrl_dsn, w_gnd) > v_vdd/2)
 			V(w_dac_out, w_gnd) <+ V(w_dac_inner, w_gnd);
 		else
-			V(w_dac_out, w_gnd) <+ V(w_dac_highZ, w_gnd);
+			V(w_dac_out, w_gnd) <+ (1e+15) * I(w_dac_out, w_gnd);
  	end
 endmodule

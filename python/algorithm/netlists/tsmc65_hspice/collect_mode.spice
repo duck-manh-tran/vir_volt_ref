@@ -1,28 +1,13 @@
 
-.option MEASFORM=3
-.option RUNLVL=4
-.option MEASDGT=6
-.param vdd=0.8
-*.param DAC_lev = 4096		$ 12 bit
-*.param DAC_lev = 16384		$ 14 bit
-.param DAC_lev = 65536		$ 16 bit
-.param k1 = 0.4
-.param k2 = 0.3
-.param k3 = 0.25
-.param m1 = floor(k1*r_cap*DAC_lev)
-.param m2 = floor(k2*r_cap*DAC_lev)
-.param m3 = floor(k3*r_cap*DAC_lev)
-.param v_cap1='vdd*m1/DAC_lev'
-.param v_cap2='vdd*m2/DAC_lev'
-.param v_cap3='vdd*m3/DAC_lev'
+.ic  v(vc)=0.3
+.param collect_mode = 1
+.option runlvl=5
+.option opfile=1 split_dp=1
+.option probe=1
+.probe tran v(*) level=1
+.probe tran v(vc) v(ctrl_dsn) v(ctrl_dsn_bar) v(vir_gnd)
 
-.ic v(vdis)='vdd+0.01'
-
-.meas tran t_dis1 TRIG v(vdis) val='v_cap1' FALL=1 TARG v(vdis) val='vdd*0.25' FALL=1
-.meas tran t_dis2 TRIG v(vdis) val='v_cap2' FALL=1 TARG v(vdis) val='vdd*0.25' FALL=1
-.meas tran t_dis3 TRIG v(vdis) val='v_cap3' FALL=1 TARG v(vdis) val='vdd*0.25' FALL=1
-
-.tran 1n 8m sweep DATA=input
+.tran 1n 16m sweep DATA=input
 
 .DATA input
 + vdd r_cap

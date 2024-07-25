@@ -2,17 +2,17 @@
 *  Design library name: vir_volt_ref
 *  Design cell name: testbench
 *  Design view name: schematic
+.option search='/home/dkits/tsmc_65/65MSRFGP_PDK/pdk_rf_1p9m_6X1Z1U/models/hspice'
 
-
-.param Cap=500f l=60n w=200n
+.param Cap=500f l=60n vdd=0.4 w=200n r_cap=1.5
 .option PARHIER = LOCAL
 .option PORT_VOLTAGE_SCALE_TO_2X = 1
 
 .option WDF=1
 .temp 25
-.lib '/home/dkits/tsmc_65/65MSRFGP_PDK/pdk_rf_1p9m_6X1Z1U/models/hspice/crn65gplus_2d5_lk_v1d0.l' TT
+.lib 'crn65gplus_2d5_lk_v1d0.l' TT
 *Custom Compiler Version O-2018.09-SP1-3
-*Wed Jun 26 11:35:01 2024
+*Thu Jun 27 16:13:12 2024
 
 .global gnd!
 ********************************************************************************
@@ -57,36 +57,23 @@ m10 net51 net51 net39 net39 pch l='l' w='(w*1)' m=1 nf=1 sd=0.2u ad=3.5e-14 as=3
 * View Stop List   : hspice hspiceD
 ********************************************************************************
 c1 vc gnd! c='Cap'
-v3 vdd gnd! dc=0.6 power=0
+v3 vdd gnd! dc='vdd' power=0
 xi0 gnd! vc dsn_h_12t l='l' w='w'
 m15 vdd ctrl_dsn_bar gnd! gnd! nch l=0.1u w=2u m=1 nf=4 sd=0.2u ad=2e-13 as=2.75e-13
 + pd=2.8e-06 ps=4.1e-06 nrd=0.05 nrs=0.05 sa=0.175u sb=0.175u sca=0 scb=0 scc=0
-xi23 vdd gnd! vc vc ctrl_dsn system
+xi24 vdd gnd! vc vc ctrl_dsn system r_cap='r_cap' collect_mode='collect_mode'
 xi19 ctrl_dsn ctrl_dsn_bar vdd gnd! invd1
 
 .hdl '/home/userdata/k61D/manhtd_61d/git/vir_volt_ref/synopsys/vir_volt_ref/system/veriloga/veriloga.va'
 
-.GLOBAL VDD VSS VDDL
+.GLOBAL VDD
 .subckt INVD1 I ZN VDD VSS
 MU1-M_u2 ZN I VSS VSS nch w=0.39u l=0.06u
 MU1-M_u3 ZN I VDD VDD pch w=0.52u l=0.06u
 .ends
 
 
-
-
-
-
-
-
-
-.tran 1n 20m start=0
-.option opfile=1 split_dp=1
-.option probe=1
-.probe tran v(*) level=1
-.probe tran v(vc) v(ctrl_dsn) v(ctrl_dsn_bar)
-
-
-
+*.include collect_mode.spice
+.include normal_mode.spice
 
 .end

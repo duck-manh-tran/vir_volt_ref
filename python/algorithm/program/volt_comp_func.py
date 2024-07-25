@@ -4,24 +4,54 @@ from functions import *
 import numpy as np
 import math
 import sys 
-
+import csv
+import pandas as pd
 
 def main():
 	get_volt_func()
-
 	plt.show()
 
 
-def get_data(sim_type, lib, dsnwk):
-	file_name = 'results/' + sim_type + '/' + lib + '/' + dsnwk + '.txt'	
+def get_va_model_data():
+	rawfile = 'data.csv'
+	array = []
+	with open(rawfile, 'r') as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			val = np.array(row)
+			val = val.astype(np.float)
+			array.append(val)
+
+	array = np.array(array)
+	df = pd.DataFrame(array, columns = ['vdd', 'r_cap', 'n1', 'n2', 'n3'])
+	df['y_val'] = (df['n1'] - df['n2'])/(df['n2'] - df['n3']) \
+					+ (df['n1'] - df['n3'])/(df['n2'] - df['n3']) \
+					- (df['n1'] - df['n3'])/(df['n1'] - df['n2']) 
+	df['ey_val'] = np.exp(df['y_val']) 
+	df_sorted = df.sort_values(by=['vdd', 'r_cap'])
+	df_sorted.to_csv('va_model.csv', index='false') 
+	return df_sorted
+
+def get_ananlysis_data(sim_type, lib, dsnwk):
+	file_name = 'results/' + sim_type + '/' + lib + '/' + dsnwk + '.txt'
 	data = np.loadtxt(file_name, dtype=float)
 	
 	if sim_type == 'volt':
-		vdds = data[:, 0]
-		r_caps = data[:, 1]
-		n_vals = data[:, 2:5]*1e6
-		n_vals = n_vals.T
-		return vdds, r_caps, n_vals
+		df = pd.DataFrame(data, columns = ['vdd', 'r_cap', 'n1', 'n2', 'n3'])
+		df['n1'] = df['n1']*1e8
+		df['n2'] = df['n2']*1e8
+		df['n3'] = df['n3']*1e8
+		df['n1'] = df['n1'].round(0)
+		df['n2'] = df['n2'].round(0)
+		df['n3'] = df['n3'].round(0)
+		df['y_val'] = (df['n1'] - df['n2'])/(df['n2'] - df['n3']) \
+						+ (df['n1'] - df['n3'])/(df['n2'] - df['n3']) \
+						- (df['n1'] - df['n3'])/(df['n1'] - df['n2']) 
+		df['ey_val'] = np.exp(df['y_val']) 
+		df_sorted = df.sort_values(by=['vdd', 'r_cap'])
+		print (df)
+		df_sorted.to_csv('analysis.csv', index='false') 
+		return df_sorted
 
 	elif sim_type == 'temp':
 		print ('TBD')
@@ -32,27 +62,26 @@ def get_data(sim_type, lib, dsnwk):
 		return 0, 0, 0
 
 def get_volt_func():
-	vdds, r_caps, n_vals = get_data('volt', 'tsmc65_hspice', 'dsn_h_12t')
+#	df = get_ananlysis_data('volt', 'tsmc65_hspice', 'dsn_h_12t')
+	df = get_va_model_data()
 	order = 5
-	r_reals = 1/vdds	
 
-	d_12 = n_vals[0] - n_vals[1]
-	d_23 = n_vals[1] - n_vals[2]
-	d_13 = n_vals[0] - n_vals[2]
-
-	div_1 = d_12/d_23
-	div_2 = d_13/d_23
-	div_3 = d_13/d_12
-
-	ey_vals = np.exp(div_1 + div_2 - div_3)
-#	ey_vals = np.exp(div_2 - div_3)
-#	ey_vals = 4*(div_1 + div_2 - div_3)
-
-	print (len(ey_vals))
+	var_x = np.array(df['r_cap'])
+	var_y = np.array(df['ey_val'])
+	var_z = np.array(10/df['vdd'])
 	
-	C_coeff = curve_fitting(order,  r_caps, ey_vals, r_reals)
-	np.savetxt('C_coeff.txt', C_coeff, delimiter='\t')
-	plot_fitting_mesh(order, C_coeff, r_caps, ey_vals, r_reals)
+	C_coeff = curve_fitting(order,  var_x, var_y, var_z)
+	C_coeff = np.around(C_coeff, 12)
+	np.savetxt('C_coeff.txt', C_coeff, delimiter=', ', fmt='%.12f')
+#	plot_fitting_mesh(order, C_coeff, var_x, var_y, var_z)
+	df = get_va_model_data()
+	print (df)
+	print (df.sort_values(by='ey_val'))
+	var_x1 = np.array(df['r_cap'])
+	var_y1 = np.array(df['ey_val'])
+	var_z1 = np.array(10/df['vdd'])
+
+	plot_fitting_mesh(order, C_coeff, var_x1, var_y1, var_z1)
 
 def curve_fitting(order, X, Y, Z):
 	# 1=linear, 2=quadratic, 3=cubic, ..., nth degree
@@ -83,6 +112,7 @@ def curve_fitting(order, X, Y, Z):
 	return C
 
 def plot_fitting_mesh (order, C, X, Y, Z):
+	C_ = C
 	X = X.reshape(-1, 1)
 	Y = Y.reshape(-1, 1)
 	Z = Z.reshape(-1, 1)
@@ -97,10 +127,8 @@ def plot_fitting_mesh (order, C, X, Y, Z):
 	# evaluate model on grid
 	A = (XX.reshape(-1,1) ** eX) * (YY.reshape(-1,1) ** eY)
 	ZZ = np.dot(A, C).reshape(XX.shape)
-	C_ = np.around(C, 15)
 	B = (X ** eX) * (Y ** eY)
 	Z_cap = np.dot(B, C_).reshape(X.shape)
-
 
 	LR_e = [(100 * abs(Z_cap[iz] - Z[iz])/Z[iz]) for iz in range(len(Z_cap))]
 	LR_e = np.concatenate( LR_e, axis=0 )

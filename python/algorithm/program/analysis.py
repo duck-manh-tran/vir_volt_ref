@@ -9,14 +9,14 @@ import pandas as pd
 ## option flags to run the analysis
 
 ## Overwrite the simulation files
-ovr_flag = False
-#ovr_flag = True
+#ovr_flag = False
+ovr_flag = True
 
 def main():
 
 ## Choose the type of the analysis
-#	sim_type = 'volt'
-	sim_type = 'temp'
+	sim_type = 'volt'
+#	sim_type = 'temp'
 
 ## Choose the library-simulator of the analysis
 	lib = 'tsmc65_hspice'
@@ -26,12 +26,11 @@ def main():
 ## Choose the discharge network for the analysis
 	dsnwk = 'dsn_h_12t'
 
-#	analysis(sim_type, lib, dsnwk)
+	analysis(sim_type, lib, dsnwk)
 #	volt_anls_1(lib, dsnwk)
 #	CTAT_var_anls1(lib, dsnwk)
 #	temp_anls_1(lib, dsnwk)
-	CTAT_var_anls2(lib, dsnwk)
-	plt.show()
+#	CTAT_var_anls2(lib, dsnwk)
 
 
 def analysis(sim_type, lib, dsnwk):
@@ -74,7 +73,7 @@ def hspice_sim (sim_type='volt', lib='tsmc65_hspice', dsnwk='dsn_h_12t', subfix=
 	arg2 = " -o " + rawfile
 	cmd = cmd + arg1 + arg2
 	print (cmd)
-	#os.system (cmd)
+	os.system (cmd)
 
 	print ('processing RAW file')	
 	rawfile = rawfile+'.mt0.csv'
@@ -96,9 +95,9 @@ def hspice_sim (sim_type='volt', lib='tsmc65_hspice', dsnwk='dsn_h_12t', subfix=
 	array = np.array(array)
 	print ('length of data: ', len(array))
 
-	arr = []
-	for ix in range (num_of_val-3):
-		arr = np.vstack((arr, array[:, ix+1]))
+	arr = array[:, 1]
+	for ix in range (num_of_val-4):
+		arr = np.vstack((arr, array[:, ix+2]))
 	
 	arr = arr.T
 	np.savetxt(outfile, arr, fmt = '%3.6e')
