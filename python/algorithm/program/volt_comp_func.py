@@ -23,6 +23,7 @@ def get_va_model_data():
 			array.append(val)
 
 	array = np.array(array)
+	print (array)
 	df = pd.DataFrame(array, columns = ['vdd', 'r_cap', 'n1', 'n2', 'n3'])
 	df['y_val'] = (df['n1'] - df['n2'])/(df['n2'] - df['n3']) \
 					+ (df['n1'] - df['n3'])/(df['n2'] - df['n3']) \
@@ -62,24 +63,22 @@ def get_ananlysis_data(sim_type, lib, dsnwk):
 		return 0, 0, 0
 
 def get_volt_func():
-#	df = get_ananlysis_data('volt', 'tsmc65_hspice', 'dsn_h_12t')
-	df = get_va_model_data()
+	df = get_ananlysis_data('volt', 'tsmc65_hspice', 'dsn_h_12t')
+	df_col = get_va_model_data()
 	order = 5
 
-	var_x = np.array(df['r_cap'])
-	var_y = np.array(df['ey_val'])
-	var_z = np.array(10/df['vdd'])
+	var_x = np.array(df_col['r_cap'])
+	var_y = np.array(df_col['ey_val'])
+	var_z = np.array(10/df_col['vdd'])
 	
 	C_coeff = curve_fitting(order,  var_x, var_y, var_z)
 	C_coeff = np.around(C_coeff, 12)
 	np.savetxt('C_coeff.txt', C_coeff, delimiter=', ', fmt='%.12f')
 #	plot_fitting_mesh(order, C_coeff, var_x, var_y, var_z)
-	df = get_va_model_data()
-	print (df)
 	print (df.sort_values(by='ey_val'))
-	var_x1 = np.array(df['r_cap'])
-	var_y1 = np.array(df['ey_val'])
-	var_z1 = np.array(10/df['vdd'])
+	var_x1 = np.array(df_col['r_cap'])
+	var_y1 = np.array(df_col['ey_val'])
+	var_z1 = np.array(10/df_col['vdd'])
 
 	plot_fitting_mesh(order, C_coeff, var_x1, var_y1, var_z1)
 

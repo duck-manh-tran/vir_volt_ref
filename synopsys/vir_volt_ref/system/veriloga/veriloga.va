@@ -21,10 +21,10 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	parameter real k_thres = 0.25;
 	parameter real v_ref = 0.35;
 	parameter real rel_err = 0.01;
-	parameter integer DAC_Nbit = 16;
+	parameter integer DAC_Nbit = 14;
 	parameter integer TDC_Nbit = 12;
 	parameter integer collect_mode = 1;
-	parameter integer clk_freq = 1e8;
+	parameter integer clk_freq = 10e6;
 	integer DAC_Nlevel = 2 ** DAC_Nbit;
 	string result = "result.csv";
 	string data_file = "data.csv";
@@ -32,27 +32,27 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 
 	real k[0:2] = '{0.4, 0.3, 0.25};
 	real C [0:20] = '{
-							64815.449212712680
-							,-40217.431354969689
-							,-28547.564333606533
-							,9328.263654274406
-							,14405.025957362182
-							,5004.210897595906
-							,-963.407303386771
-							,-2570.402070839788
-							,-1921.971103159386
-							,-436.342169753906
-							,40.999246572674
-							,182.962482776886
-							,234.603418884873
-							,113.127024029542
-							,18.924285294002
-							,-0.926566263117
-							,-3.519103094401
-							,-8.899307024496
-							,-7.026170339461
-							,-2.481821733698
-							,-0.326301914894
+							76475.871413369227
+							,-48373.878161451081
+							,-33511.011779071254
+							,11938.238653234046
+							,17018.839436844664
+							,5867.650088503298
+							,-1483.261163888308
+							,-3127.094417473294
+							,-2251.348292349863
+							,-512.352569646862
+							,108.957331572629
+							,242.631222262408
+							,278.680823301886
+							,131.982111671606
+							,22.298372153102
+							,-5.665627580883
+							,-6.104436940692
+							,-11.172280294623
+							,-8.207546451750
+							,-2.895852038489
+							,-0.386442148876
 						};
 
 	// Variable decleration 
@@ -79,10 +79,6 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 	integer f;
 	analog begin
 		@(initial_step) begin
-//			f = $fopen(data_file, "a");
-//				$fwrite(f, "--measurement data file--\n");
-//			$fclose(f);
-		
 			f = $fopen(log_file, "w");
 				$fwrite(f, "--log display file--\n");
 			$fclose(f);
@@ -90,7 +86,7 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 			v_vdd = V(w_vdd, w_gnd);
 			r = r_cap;
 			for (ix = 0; ix < 3; ix =ix +1) begin
-				m[ix] = $floor(k[ix] * r * DAC_Nlevel);
+				m[ix] = $floor(k[ix] * r_cap * DAC_Nlevel);
 				f = $fopen(log_file, "a");
 					$fdisplay(f, "display: m%d = %d", ix+1, m[ix]);
 				$fclose(f);
@@ -140,22 +136,19 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 				else
 					r = y_ptat/10;
 				
-				f = $fopen (data_file, "a");
-					$fdisplay (f, "%.3f, %.3f, %.3f, %d, %d, %d", v_vdd, r, r_old, n[0], n[1], n[2]);
-				$fclose(f);
-				for (ix = 0; ix < 3; ix =ix +1)
-					m[ix] = $floor(k[ix] * r * DAC_Nlevel);
-				v_dac[loop] = v_vdd * ($floor(DAC_Nlevel * v_ref*r)/DAC_Nlevel);
 				loop = loop + 1;
 			end
 			else
 				time_processing = 0;
 			step = (step + 1) % 3;
 			
-			if (loop == 4) begin
+			if (abs(r-r_old)/r_old < rel_err) begin
 				k_ref = $floor(DAC_Nlevel * v_ref*r);
 				time_hold_ref_volt = time_cross_threshold + time_after_cross_threshold;
 				time_cross_threshold = 0;
+			end else begin
+				for (ix = 0; ix < 3; ix =ix +1)
+					m[ix] = $floor(k[ix] * r * DAC_Nlevel);
 			end
 			f = $fopen (log_file, "a");
 				$fdisplay(f, "time_cross_threshold = %f", time_cross_threshold * 1e6);
@@ -178,8 +171,7 @@ module system (w_vdd, w_gnd, w_tdc_in, w_dac_out, w_ctrl_dsn);
 				$fdisplay(f, "v_dac_inner = %f", v_dac_inner);
 			$fclose (f);
 			f = $fopen (result, "a");
-				$fdisplay(f, "%.2f, %.3f, %.3f, %.3f, %.3f, %.3f", 
-				v_vdd, v_dac[0], v_dac[1], v_dac[2], v_dac[3], v_dac_inner);
+				$fdisplay(f, "%.3f, %.3f, %.4f, %d", v_vdd, r_cap, v_dac_inner, loop);
 			$fclose (f);
 		end
 
