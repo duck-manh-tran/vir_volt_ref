@@ -1,0 +1,23 @@
+choose xa -n ../top.spice -c xa.cmd;
+bus_format [%d];
+spice_top name=top;
+
+// use_verilog -module ddpm port_map ({d_in[3], d_in[2], d_in[1], d_in[0]}=>dac_in, clk_ddpm=>clk_ddpm, rst=>rst, clk_out=>clk_out, ddpm_out=>ddpm_out);
+// use_verilog -module counter port_map (clk_data => clk_data, { count[3], count[2], count[1], count[0] } => count[3:0]);
+
+spice_port_order_as_vlog;
+use_verilog -module counter port_map (* => snps_by_name);
+use_verilog -module ddpm port_map (* => snps_by_name);
+
+a2d loth=45% hith=55% hiz_off node=top.clk vdd=power minv=0.1 minv_logic=0;
+a2d loth=45% hith=55% hiz_off node=top.rst vdd=power minv=0.1 minv_logic=0;
+
+d2a powernet rise_time=2e-9 fall_time=2e-9 delay=1.0e-12 x2v=3 hiv=100% lov=0% node=top.pulse_out vdd=power;
+
+
+// a2d loth=0.25v hith=0.35v hiz_off node=top.clk_da_buf;
+a2d node=top.clk_da_buf hith=50% loth=50% vdd=power;
+// a2d node=top.x_buf.z hith=50% loth=50% vdd=power;
+
+//param_pass enable;
+

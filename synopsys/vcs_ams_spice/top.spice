@@ -1,0 +1,65 @@
+*  Generated for: XAVCSHSPICE
+*  Design library name: vir_volt_ref
+*  Design cell name: tet_ddpm_dac
+*  Design view name: schematic
+.option search='/home/dkits/tsmc_65/65MSRFGP_PDK/pdk_rf_1p9m_6X1Z1U/models/hspice'
+
+.param vdd=0.6
+.param clk_frq=80e6
+.param dac_val=15
+.param prd='1/clk_frq'
+.param tr=1n
+.param tf='tr'
+.param pwl='prd/2 - tr'
+
+.option PARHIER = LOCAL
+
+.option xa_cmd="set_waveform_option -format fsdb"
+.option xa_cmd="set_waveform_option -format fsdb_5.7"
+.temp 25
+.lib 'crn65gplus_2d5_lk_v1d0.l' TT
+*Custom Compiler Version O-2018.09-SP1-3
+*Mon Aug 12 15:25:20 2024
+
+.global gnd
+********************************************************************************
+* Library          : vir_volt_ref
+* Cell             : tet_ddpm_dac
+* View             : schematic
+* View Search List : hspice hspiceD schematic verilog functional behavioral vhdl_config vhdl spice veriloga verilogams
+* View Stop List   : hspice hspiceD functional behavioral symbol
+********************************************************************************
+c1 v_dac gnd c=10p
+r2 v_dac pulse_out r=4e6
+v8 power gnd dc='vdd' power=0
+v3 clk gnd dc=0 pulse ( 0 'vdd' 0 'tr' 'tf' 'pwl' 'prd' )
+v4 rst gnd dc=0 pulse ( 0 'vdd' 0 'tr' 'tf' '4*prd' 1 )
+v5 clk_da gnd pulse ( 0 'vdd' 5*prd 'tr' 'tf' 100u 200u )
+
+x_buf clk_da clk_da_buf power gnd BUFFD1
+x_cnt clk_da_buf data_in[13] data_in[12] data_in[11] data_in[10]
++ data_in[9] data_in[8] data_in[7] data_in[6] data_in[5] data_in[4]
++ data_in[3] data_in[2] data_in[1] data_in[0] counter
+
+x_dac data_in[13] data_in[12] data_in[11] data_in[10] data_in[9]
++ data_in[8] data_in[7] data_in[6] data_in[5] data_in[4] data_in[3]
++ data_in[2] data_in[1] data_in[0] clk rst clk_out pulse_out ddpm
+
+
+.subckt BUFFD1 I Z VDD VSS
+MI1-M_u2 Z net6 VSS VSS nch w=0.39u l=0.06u
+MI2-M_u2 net6 I VSS VSS nch w=0.195u l=0.06u
+MI1-M_u3 Z net6 VDD VDD pch w=0.52u l=0.06u
+MI2-M_u3 net6 I VDD VDD pch w=0.26u l=0.06u
+.ends
+
+
+
+*.include digital_subckt.spice
+
+
+.tran 100p 2m
+
+.probe tran v(*)
+
+.end
